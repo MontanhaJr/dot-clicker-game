@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -170,28 +171,26 @@ fun RestartConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
         titleContentColor = Color.White,
         textContentColor = Color.LightGray,
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "🔄 Reiniciar Jogo?",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-            }
+            Text(
+                text = stringResource(R.string.restart_title),
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
         },
         text = {
             Text(
-                text = "Tem certeza que deseja reiniciar a partida? Todo o progresso atual será perdido.",
+                text = stringResource(R.string.restart_desc),
                 fontSize = 16.sp
             )
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Reiniciar", color = Color(0xFFE91E63), fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.restart_confirm), color = Color(0xFFE91E63), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = Color.Gray)
+                Text(stringResource(R.string.cancel), color = Color.Gray)
             }
         }
     )
@@ -225,7 +224,7 @@ fun GameHeader(
                     modifier = Modifier.height(36.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF303050))
                 ) {
-                    Text("Menu", fontSize = 14.sp, color = Color.White)
+                    Text(stringResource(R.string.menu), fontSize = 14.sp, color = Color.White)
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -235,7 +234,7 @@ fun GameHeader(
                         modifier = Modifier.height(36.dp),
                         colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF303050))
                     ) {
-                        Text("Regras", fontSize = 14.sp, color = Color.White)
+                        Text(stringResource(R.string.rules), fontSize = 14.sp, color = Color.White)
                     }
                     FilledTonalButton(
                         onClick = onNewGame,
@@ -243,7 +242,7 @@ fun GameHeader(
                         modifier = Modifier.height(36.dp),
                         colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF303050))
                     ) {
-                        Text("Novo", fontSize = 14.sp, color = Color.White)
+                        Text(stringResource(R.string.new_game), fontSize = 14.sp, color = Color.White)
                     }
                 }
             }
@@ -270,8 +269,16 @@ fun GameHeader(
             }
 
             if (gameState.gameOver) {
+                val winnerMessage = when {
+                    (gameState.playerScores.maxOrNull() ?: 0) == 0 -> stringResource(R.string.draw)
+                    gameState.isCpuGame && gameState.playerScores.indexOf(gameState.playerScores.maxOrNull()) == 1 -> stringResource(R.string.cpu_won)
+                    else -> {
+                        val winnerIndex = gameState.playerScores.indexOf(gameState.playerScores.maxOrNull())
+                        stringResource(R.string.player_won, gameState.playerNames[winnerIndex])
+                    }
+                }
                 Text(
-                    text = gameState.getWinnerMessage(gameMode == GameMode.VS_CPU),
+                    text = winnerMessage,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color(0xFF00FF00),
@@ -322,7 +329,7 @@ fun RulesDialog(onDismiss: () -> Unit) {
         textContentColor = Color.LightGray,
         title = {
             Text(
-                text = "📖 Regras",
+                text = stringResource(R.string.rules),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
@@ -331,16 +338,16 @@ fun RulesDialog(onDismiss: () -> Unit) {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                RuleItem(title = "🎯 Objetivo", description = "Conecte os pontos para fechar triângulos.")
+                RuleItem(title = stringResource(R.string.objective_title), description = stringResource(R.string.objective_desc))
                 Spacer(modifier = Modifier.height(8.dp))
-                RuleItem(title = "🎮 Turnos", description = "Complete um triângulo e jogue novamente.")
+                RuleItem(title = stringResource(R.string.turns_title), description = stringResource(R.string.turns_desc))
                 Spacer(modifier = Modifier.height(8.dp))
-                RuleItem(title = "❌ Proibido", description = "Não cruze linhas ou triângulos.")
+                RuleItem(title = stringResource(R.string.prohibited_title), description = stringResource(R.string.prohibited_desc))
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) { 
-                Text("Entendi", color = Color(0xFF00FFFF)) 
+                Text(stringResource(R.string.understood), color = Color(0xFF00FFFF)) 
             }
         }
     )
@@ -351,13 +358,5 @@ fun RuleItem(title: String, description: String) {
     Column {
         Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF00FFFF))
         Text(text = description, fontSize = 13.sp, color = Color.LightGray)
-    }
-}
-
-fun getDifficultyEmoji(difficulty: Difficulty): String {
-    return when (difficulty) {
-        Difficulty.EASY -> "😊"
-        Difficulty.MEDIUM -> "🤔"
-        Difficulty.HARD -> "🧠"
     }
 }
