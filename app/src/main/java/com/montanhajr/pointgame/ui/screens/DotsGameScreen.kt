@@ -47,6 +47,7 @@ fun DotsGameScreen(
         )
     }
     var showRulesDialog by remember { mutableStateOf(false) }
+    var showRestartDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -108,12 +109,7 @@ fun DotsGameScreen(
             gameMode = gameMode,
             scrollState = scrollState,
             onNewGame = {
-                gameState = GameState.createNew(
-                    isCpuGame = gameMode == GameMode.VS_CPU,
-                    difficulty = difficulty ?: Difficulty.MEDIUM,
-                    numPlayers = numPlayers,
-                    playerNames = playerNames
-                )
+                showRestartDialog = true
             },
             onShowRules = { showRulesDialog = true },
             onBackToMenu = onBackToMenu
@@ -149,6 +145,56 @@ fun DotsGameScreen(
     if (showRulesDialog) {
         RulesDialog(onDismiss = { showRulesDialog = false })
     }
+
+    if (showRestartDialog) {
+        RestartConfirmDialog(
+            onConfirm = {
+                gameState = GameState.createNew(
+                    isCpuGame = gameMode == GameMode.VS_CPU,
+                    difficulty = difficulty ?: Difficulty.MEDIUM,
+                    numPlayers = numPlayers,
+                    playerNames = playerNames
+                )
+                showRestartDialog = false
+            },
+            onDismiss = { showRestartDialog = false }
+        )
+    }
+}
+
+@Composable
+fun RestartConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1A1A2E),
+        titleContentColor = Color.White,
+        textContentColor = Color.LightGray,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "🔄 Reiniciar Jogo?",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+            }
+        },
+        text = {
+            Text(
+                text = "Tem certeza que deseja reiniciar a partida? Todo o progresso atual será perdido.",
+                fontSize = 16.sp
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Reiniciar", color = Color(0xFFE91E63), fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = Color.Gray)
+            }
+        }
+    )
 }
 
 @Composable
