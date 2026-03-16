@@ -11,6 +11,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DotConnect">
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-4612925515848375~7123456789"/> <!-- Substitua pelo seu App ID real do AdMob -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
