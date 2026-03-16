@@ -25,6 +25,7 @@ import com.montanhajr.pointgame.logic.GameState
 import com.montanhajr.pointgame.models.Difficulty
 import com.montanhajr.pointgame.models.GameMode
 import com.montanhajr.pointgame.models.PlayerColors
+import com.montanhajr.pointgame.ui.components.AdBanner
 import com.montanhajr.pointgame.ui.components.GameBoard
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -141,6 +142,9 @@ fun DotsGameScreen(
                 }
             )
         }
+
+        // Banner fixo no rodapé
+        AdBanner()
     }
 
     if (showRulesDialog) {
