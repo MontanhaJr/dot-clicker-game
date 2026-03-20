@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DotConnect</string>
+    <string name="app_name">DotPop!</string>
     <string name="game_title">RELIER LES POINTS !</string>
     <string name="choose_game_mode">Choisir le mode de jeu</string>
     <string name="two_players">👥 2 Joueurs</string>

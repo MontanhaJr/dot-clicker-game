@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DotConnect</string>
+    <string name="app_name">DotPop!</string>
     <string name="game_title">CONNECT THE DOTS!</string>
     <string name="choose_game_mode">Choose game mode</string>
     <string name="two_players">👥 2 Players</string>
