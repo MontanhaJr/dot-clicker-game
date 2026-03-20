@@ -263,10 +263,12 @@ fun GameHeader(
             ) {
                 gameState.playerNames.forEachIndexed { index, name ->
                     val isCpu = gameMode == GameMode.VS_CPU && index == 1
+                    val playerColor = if (isCpu) Color(0xFFE0E0E0) else PlayerColors[index % PlayerColors.size]
+                    
                     PlayerScoreCompact(
                         playerName = if (isCpu) "CPU" else name,
                         score = gameState.playerScores[index],
-                        color = PlayerColors[index % PlayerColors.size],
+                        color = playerColor,
                         isActive = gameState.currentPlayer == index + 1
                     )
                 }
