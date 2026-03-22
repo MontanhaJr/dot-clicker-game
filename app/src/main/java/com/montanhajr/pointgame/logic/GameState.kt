@@ -119,7 +119,78 @@ data class GameState(
     }
 
     private fun getCpuMoveHard(): Pair<Int, Int>? {
-        return findTriangleCompletingMove() ?: findBlockingMove() ?: findStrategicMove() ?: getCpuMoveEasy()
+        val allMoves = getAllValidMoves()
+        if (allMoves.isEmpty()) return null
+
+        // 1. Tentar completar um triângulo (Prioridade máxima)
+        val winningMove = allMoves.firstOrNull { wouldMoveCompleteTriangle(it.first, it.second, lines) }
+        if (winningMove != null) return winningMove
+
+        // 2. Bloquear oponente
+        val blockingMove = allMoves.firstOrNull { wouldMoveCompleteTriangle(it.first, it.second, lines, playerForSim = 1) }
+        if (blockingMove != null) return blockingMove
+
+        // 3. Filtrar movimentos perigosos
+        val safeMoves = allMoves.filter { !isMoveDangerous(it) }
+
+        if (safeMoves.isNotEmpty()) {
+            return safeMoves.maxByOrNull { move ->
+                val testState = copy(lines = lines + Line(move.first, move.second, currentPlayer))
+                testState.countPotentialTriangles()
+            }
+        }
+
+        // 4. Se todos forem perigosos, escolher o que abre menos pontos
+        return allMoves.minByOrNull { countTrianglesOpenedByMove(it) }
+    }
+
+    private fun isMoveDangerous(move: Pair<Int, Int>): Boolean {
+        val (a, b) = move
+        if (wouldMoveCompleteTriangle(a, b, lines)) return false
+
+        val nextLines = lines + Line(a, b, currentPlayer)
+        for (p in points) {
+            val c = p.id
+            if (c == a || c == b) continue
+            
+            val hasAC = nextLines.any { (it.startId == a && it.endId == c) || (it.startId == c && it.endId == a) }
+            val hasBC = nextLines.any { (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
+            
+            if (hasAC && isValidMove(b, c, nextLines) && wouldMoveCompleteTriangle(b, c, nextLines, playerForSim = 1)) return true
+            if (hasBC && isValidMove(a, c, nextLines) && wouldMoveCompleteTriangle(a, c, nextLines, playerForSim = 1)) return true
+        }
+        return false
+    }
+
+    private fun countTrianglesOpenedByMove(move: Pair<Int, Int>): Int {
+        val (a, b) = move
+        var count = 0
+        val nextLines = lines + Line(a, b, currentPlayer)
+        
+        for (p in points) {
+            val c = p.id
+            if (c == a || c == b) continue
+            val hasAC = nextLines.any { (it.startId == a && it.endId == c) || (it.startId == c && it.endId == a) }
+            val hasBC = nextLines.any { (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
+            if (hasAC && isValidMove(b, c, nextLines) && wouldMoveCompleteTriangle(b, c, nextLines, playerForSim = 1)) count++
+            if (hasBC && isValidMove(a, c, nextLines) && wouldMoveCompleteTriangle(a, c, nextLines, playerForSim = 1)) count++
+        }
+        return count
+    }
+
+    private fun wouldMoveCompleteTriangle(startId: Int, endId: Int, currentLines: List<Line>, playerForSim: Int = currentPlayer): Boolean {
+        val a = startId; val b = endId
+        val nextLines = currentLines + Line(a, b, playerForSim)
+        for (p in points) {
+            val c = p.id
+            if (c == a || c == b) continue
+            val hasAC = currentLines.any { (it.startId == a && it.endId == c) || (it.startId == c && it.endId == a) }
+            val hasBC = currentLines.any { (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
+            if (hasAC && hasBC) {
+                if (!hasAnyPointInside(a, b, c) && !hasLinesCrossing(a, b, c, nextLines)) return true
+            }
+        }
+        return false
     }
 
     private fun getAllValidMoves(): List<Pair<Int, Int>> {
@@ -136,22 +207,7 @@ data class GameState(
 
     private fun findTriangleCompletingMove(): Pair<Int, Int>? {
         return getAllValidMoves().firstOrNull { move ->
-            val testState = copy(lines = lines + Line(move.first, move.second, currentPlayer))
-            testState.findNewTriangles(testState.lines).size > triangles.size
-        }
-    }
-
-    private fun findBlockingMove(): Pair<Int, Int>? {
-        return getAllValidMoves().firstOrNull { move ->
-            val testState = copy(lines = lines + Line(move.first, move.second, 1))
-            testState.findNewTriangles(testState.lines).size > triangles.size
-        }
-    }
-
-    private fun findStrategicMove(): Pair<Int, Int>? {
-        return getAllValidMoves().maxByOrNull { move ->
-            val testState = copy(lines = lines + Line(move.first, move.second, currentPlayer))
-            testState.countPotentialTriangles()
+            wouldMoveCompleteTriangle(move.first, move.second, lines)
         }
     }
 
@@ -172,14 +228,14 @@ data class GameState(
         return count
     }
 
-    fun isValidMove(startId: Int, endId: Int): Boolean {
+    fun isValidMove(startId: Int, endId: Int, currentLines: List<Line> = lines): Boolean {
         if (startId == endId) return false
-        if (lines.any { (it.startId == startId && it.endId == endId) || (it.startId == endId && it.endId == startId) }) return false
+        if (currentLines.any { (it.startId == startId && it.endId == endId) || (it.startId == endId && it.endId == startId) }) return false
 
         val start = points.find { it.id == startId }?.position ?: return false
         val end = points.find { it.id == endId }?.position ?: return false
 
-        if (lines.any { doLinesIntersect(start, end, points.find { p -> p.id == it.startId }?.position ?: Offset.Zero, points.find { p -> p.id == it.endId }?.position ?: Offset.Zero) }) return false
+        if (currentLines.any { doLinesIntersect(start, end, points.find { p -> p.id == it.startId }?.position ?: Offset.Zero, points.find { p -> p.id == it.endId }?.position ?: Offset.Zero) }) return false
         if (points.any { it.id != startId && it.id != endId && isPointOnLineSegment(it.position, start, end) }) return false
         if (triangles.any { lineIntersectsTriangle(start, end, it) }) return false
 
@@ -190,17 +246,13 @@ data class GameState(
         val p1 = points.find { it.id == triangle.p1Id }?.position ?: return false
         val p2 = points.find { it.id == triangle.p2Id }?.position ?: return false
         val p3 = points.find { it.id == triangle.p3Id }?.position ?: return false
-        
         val triangleIds = setOf(triangle.p1Id, triangle.p2Id, triangle.p3Id)
         val startId = points.find { it.position == lineStart }?.id
         val endId = points.find { it.position == lineEnd }?.id
-        
         if (startId != null && endId != null && triangleIds.contains(startId) && triangleIds.contains(endId)) return false
-        
         val edges = listOf(Pair(p1, p2), Pair(p2, p3), Pair(p3, p1))
         if (edges.any { doLinesIntersect(lineStart, lineEnd, it.first, it.second) }) return true
         if (isPointInsideTriangle(lineStart, p1, p2, p3) && isPointInsideTriangle(lineEnd, p1, p2, p3)) return true
-        
         return false
     }
 
@@ -214,12 +266,9 @@ data class GameState(
                     val hasL12 = allLines.any { (it.startId == p1 && it.endId == p2) || (it.startId == p2 && it.endId == p1) }
                     val hasL23 = allLines.any { (it.startId == p2 && it.endId == p3) || (it.startId == p3 && it.endId == p2) }
                     val hasL31 = allLines.any { (it.startId == p3 && it.endId == p1) || (it.startId == p1 && it.endId == p3) }
-
                     if (hasL12 && hasL23 && hasL31) {
                         if (!hasAnyPointInside(p1, p2, p3) && !hasLinesCrossing(p1, p2, p3, allLines)) {
-                            val lastLine = allLines.lastOrNull { l ->
-                                setOf(l.startId, l.endId).intersect(setOf(p1, p2, p3)).size == 2
-                            }
+                            val lastLine = allLines.lastOrNull { l -> setOf(l.startId, l.endId).intersect(setOf(p1, p2, p3)).size == 2 }
                             val owner = lastLine?.player ?: currentPlayer
                             if (found.none { setOf(it.p1Id, it.p2Id, it.p3Id) == setOf(p1, p2, p3) }) {
                                 found.add(Triangle(p1, p2, p3, owner))
@@ -245,7 +294,6 @@ data class GameState(
         val p3 = points.find { it.id == p3Id }?.position ?: return false
         val triangleEdges = listOf(Pair(p1, p2), Pair(p2, p3), Pair(p3, p1))
         val triangleIds = setOf(p1Id, p2Id, p3Id)
-
         return allLines.any { line ->
             if (triangleIds.contains(line.startId) && triangleIds.contains(line.endId)) return@any false
             val s = points.find { it.id == line.startId }?.position ?: return@any false
