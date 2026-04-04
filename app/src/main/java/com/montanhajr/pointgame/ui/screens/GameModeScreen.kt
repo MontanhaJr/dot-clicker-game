@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +20,7 @@ import com.montanhajr.pointgame.models.Difficulty
 import com.montanhajr.pointgame.models.GameMode
 import com.montanhajr.pointgame.models.PlayerColors
 import com.montanhajr.pointgame.ui.components.GalaxyBackground
+import com.montanhajr.pointgame.ui.components.PremiumDialog
 
 @Composable
 fun GameModeScreen() {
@@ -27,59 +30,76 @@ fun GameModeScreen() {
     var playerNames by remember { mutableStateOf<List<String>?>(null) }
     var showDifficultyDialog by remember { mutableStateOf(false) }
     var showMultiplayerDialog by remember { mutableStateOf(false) }
+    var showPremiumDialog by remember { mutableStateOf(false) }
     var startGame by remember { mutableStateOf(false) }
 
-    when {
-        gameMode == null -> {
-            GameModeSelection(
-                onTwoPlayers = { 
-                    gameMode = GameMode.TWO_PLAYERS
-                    playerNames = listOf(
-                        "Player 1",
-                        "Player 2"
+    Scaffold(
+        floatingActionButton = {
+            if (gameMode == null) {
+                ExtendedFloatingActionButton(
+                    onClick = { showPremiumDialog = true },
+                    containerColor = Color(0xFFFFD700), // Gold
+                    contentColor = Color(0xFF1A1A2E),
+                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
+                    text = { Text(stringResource(R.string.premium_button), fontWeight = FontWeight.Bold) }
+                )
+            }
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            when {
+                gameMode == null -> {
+                    GameModeSelection(
+                        onTwoPlayers = { 
+                            gameMode = GameMode.TWO_PLAYERS
+                            playerNames = listOf(
+                                "Player 1",
+                                "Player 2"
+                            )
+                            startGame = true
+                         },
+                        onVsCpu = { showDifficultyDialog = true },
+                        onMultiplayer = { showMultiplayerDialog = true }
                     )
-                    startGame = true
-                 },
-                onVsCpu = { showDifficultyDialog = true },
-                onMultiplayer = { showMultiplayerDialog = true }
-            )
-        }
-        gameMode == GameMode.TWO_PLAYERS && startGame -> {
-            DotsGameScreen(
-                gameMode = GameMode.TWO_PLAYERS,
-                difficulty = null,
-                numPlayers = 2,
-                playerNames = playerNames,
-                onBackToMenu = { 
-                    gameMode = null
-                    startGame = false
-                    playerNames = null
-                 }
-            )
-        }
-        gameMode == GameMode.VS_CPU && startGame -> {
-            DotsGameScreen(
-                gameMode = GameMode.VS_CPU,
-                difficulty = difficulty,
-                numPlayers = 2,
-                onBackToMenu = {
-                    gameMode = null
-                    startGame = false
                 }
-            )
-        }
-        gameMode == GameMode.MULTIPLAYER && startGame -> {
-            DotsGameScreen(
-                gameMode = GameMode.MULTIPLAYER,
-                difficulty = null,
-                numPlayers = numPlayers,
-                playerNames = playerNames,
-                onBackToMenu = {
-                    gameMode = null
-                    startGame = false
-                    playerNames = null
+                gameMode == GameMode.TWO_PLAYERS && startGame -> {
+                    DotsGameScreen(
+                        gameMode = GameMode.TWO_PLAYERS,
+                        difficulty = null,
+                        numPlayers = 2,
+                        playerNames = playerNames,
+                        onBackToMenu = { 
+                            gameMode = null
+                            startGame = false
+                            playerNames = null
+                         }
+                    )
                 }
-            )
+                gameMode == GameMode.VS_CPU && startGame -> {
+                    DotsGameScreen(
+                        gameMode = GameMode.VS_CPU,
+                        difficulty = difficulty,
+                        numPlayers = 2,
+                        onBackToMenu = {
+                            gameMode = null
+                            startGame = false
+                        }
+                    )
+                }
+                gameMode == GameMode.MULTIPLAYER && startGame -> {
+                    DotsGameScreen(
+                        gameMode = GameMode.MULTIPLAYER,
+                        difficulty = null,
+                        numPlayers = numPlayers,
+                        playerNames = playerNames,
+                        onBackToMenu = {
+                            gameMode = null
+                            startGame = false
+                            playerNames = null
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -108,6 +128,10 @@ fun GameModeScreen() {
             },
             onDismiss = { showMultiplayerDialog = false }
         )
+    }
+
+    if (showPremiumDialog) {
+        PremiumDialog(onDismiss = { showPremiumDialog = false })
     }
 }
 

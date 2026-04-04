@@ -1,5 +1,6 @@
 package com.montanhajr.pointgame.ui.screens
 
+import android.app.Activity
 import android.media.MediaPlayer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
@@ -26,7 +27,9 @@ import com.montanhajr.pointgame.models.Difficulty
 import com.montanhajr.pointgame.models.GameMode
 import com.montanhajr.pointgame.models.PlayerColors
 import com.montanhajr.pointgame.ui.components.AdBanner
+import com.montanhajr.pointgame.ui.components.AdManager
 import com.montanhajr.pointgame.ui.components.GameBoard
+import com.montanhajr.pointgame.ui.components.PremiumDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -48,8 +51,12 @@ fun DotsGameScreen(
             )
         )
     }
+    
     var showRulesDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
+    var showPremiumDialog by remember { mutableStateOf(false) }
+    var restartCountWithoutAd by remember { mutableStateOf(0) }
+    
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -62,6 +69,10 @@ fun DotsGameScreen(
     val connectionSound = remember { MediaPlayer.create(context, R.raw.connection) }
     val playerPointSound = remember { MediaPlayer.create(context, R.raw.player_point) }
     val cpuPointSound = remember { MediaPlayer.create(context, R.raw.cpu_point) }
+
+    LaunchedEffect(Unit) {
+        AdManager.loadInterstitial(context)
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -100,6 +111,45 @@ fun DotsGameScreen(
         }
     }
 
+    fun performRestart() {
+        gameState = GameState.createNew(
+            isCpuGame = gameMode == GameMode.VS_CPU,
+            difficulty = difficulty ?: Difficulty.MEDIUM,
+            numPlayers = numPlayers,
+            playerNames = playerNames
+        )
+        showRestartDialog = false
+    }
+
+    fun handleRestartLogic() {
+        val totalPoints = gameState.points.size
+        val totalPossibleLines = (totalPoints * (totalPoints - 1)) / 2
+        val remainingMoves = totalPossibleLines - gameState.lines.size
+        
+        val shouldShowAd = when {
+            gameState.gameOver -> true
+            remainingMoves < 3 -> true
+            restartCountWithoutAd >= 2 -> {
+                restartCountWithoutAd = 0
+                true
+            }
+            else -> {
+                restartCountWithoutAd++
+                false
+            }
+        }
+
+        val activity = context as? Activity
+        
+        if (shouldShowAd && activity != null) {
+            AdManager.showInterstitial(activity) {
+                performRestart()
+            }
+        } else {
+            performRestart()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -112,15 +162,8 @@ fun DotsGameScreen(
             scrollState = scrollState,
             onNewGame = {
                 if (gameState.gameOver) {
-                    // Se o jogo terminou, reinicia direto sem mostrar o modal
-                    gameState = GameState.createNew(
-                        isCpuGame = gameMode == GameMode.VS_CPU,
-                        difficulty = difficulty ?: Difficulty.MEDIUM,
-                        numPlayers = numPlayers,
-                        playerNames = playerNames
-                    )
+                    handleRestartLogic()
                 } else {
-                    // Se o jogo está em curso, mostra o modal de confirmação
                     showRestartDialog = true
                 }
             },
@@ -154,8 +197,7 @@ fun DotsGameScreen(
             )
         }
 
-        // Banner fixo no rodapé
-        AdBanner()
+        AdBanner(onPremiumClick = { showPremiumDialog = true })
     }
 
     if (showRulesDialog) {
@@ -164,17 +206,13 @@ fun DotsGameScreen(
 
     if (showRestartDialog) {
         RestartConfirmDialog(
-            onConfirm = {
-                gameState = GameState.createNew(
-                    isCpuGame = gameMode == GameMode.VS_CPU,
-                    difficulty = difficulty ?: Difficulty.MEDIUM,
-                    numPlayers = numPlayers,
-                    playerNames = playerNames
-                )
-                showRestartDialog = false
-            },
+            onConfirm = { handleRestartLogic() },
             onDismiss = { showRestartDialog = false }
         )
+    }
+
+    if (showPremiumDialog) {
+        PremiumDialog(onDismiss = { showPremiumDialog = false })
     }
 }
 

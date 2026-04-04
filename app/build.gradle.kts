@@ -12,8 +12,8 @@ android {
         applicationId = "com.montanhajr.pointgame"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.2.0"
+        versionCode = 6
+        versionName = "1.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -21,6 +21,7 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "AD_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
         }
         release {
             isMinifyEnabled = false
@@ -29,6 +30,7 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("String", "AD_UNIT_ID", "\"ca-app-pub-4612925515848375/1492789146\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-4612925515848375/7008139974\"")
         }
     }
     compileOptions {
