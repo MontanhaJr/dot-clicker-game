@@ -111,7 +111,18 @@ fun DotsGameScreen(
             gameMode = gameMode,
             scrollState = scrollState,
             onNewGame = {
-                showRestartDialog = true
+                if (gameState.gameOver) {
+                    // Se o jogo terminou, reinicia direto sem mostrar o modal
+                    gameState = GameState.createNew(
+                        isCpuGame = gameMode == GameMode.VS_CPU,
+                        difficulty = difficulty ?: Difficulty.MEDIUM,
+                        numPlayers = numPlayers,
+                        playerNames = playerNames
+                    )
+                } else {
+                    // Se o jogo está em curso, mostra o modal de confirmação
+                    showRestartDialog = true
+                }
             },
             onShowRules = { showRulesDialog = true },
             onBackToMenu = onBackToMenu

@@ -31,6 +31,8 @@ fun GameBoard(
     var hoveredPointId by remember { mutableStateOf<Int?>(null) }
 
     val cpuColor = Color(0xFFE0E0E0)
+    val density = LocalDensity.current
+    val touchThreshold = with(density) { 44.dp.toPx() } // Área de toque maior para facilitar seleção
 
     fun getPlayerColor(playerIndex: Int): Color {
         return if (gameState.isCpuGame && playerIndex == 2) {
@@ -40,14 +42,9 @@ fun GameBoard(
         }
     }
 
-    // Lógica para determinar a letra exibida no triângulo
     fun getPlayerInitial(playerIndex: Int): String {
         if (gameState.isCpuGame && playerIndex == 2) return "C"
-        
         val name = gameState.playerNames.getOrNull(playerIndex - 1) ?: return "?"
-        
-        // Verifica se o nome segue o padrão "Player X" ou "Jogador X"
-        // (Independente do idioma, verificamos se começa com a base e pegamos o que vem depois)
         val prefixes = listOf("Player ", "Jogador ", "Spieler ", "Joueur ")
         for (prefix in prefixes) {
             if (name.startsWith(prefix, ignoreCase = true)) {
@@ -55,16 +52,14 @@ fun GameBoard(
                 if (afterPrefix.isNotEmpty()) return afterPrefix.take(1).uppercase()
             }
         }
-        
         return name.take(1).uppercase()
     }
 
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize()
     ) {
-        val density = LocalDensity.current.density
-        val canvasWidth = maxWidth.value * density
-        val canvasHeight = maxHeight.value * density
+        val canvasWidth = maxWidth.value * density.density
+        val canvasHeight = maxHeight.value * density.density
 
         val scaledPoints = remember(canvasWidth, canvasHeight, gameState.points) {
             val paddingPixels = 150f
@@ -84,12 +79,12 @@ fun GameBoard(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp)
+                .padding(24.dp) // Reduzi um pouco o padding externo para dar mais espaço
                 .pointerInput(gameState.gameOver, enabled) {
                     if (!gameState.gameOver && enabled) {
                         detectDragGestures(
                             onDragStart = { offset ->
-                                val pointId = getNearestPointId(offset, scaledPoints)
+                                val pointId = getNearestPointId(offset, scaledPoints, touchThreshold)
                                 if (pointId != null) {
                                     dragStartId = pointId
                                     currentDragPosition = offset
@@ -97,7 +92,7 @@ fun GameBoard(
                             },
                             onDrag = { change, _ ->
                                 currentDragPosition = change.position
-                                hoveredPointId = getNearestPointId(change.position, scaledPoints)
+                                hoveredPointId = getNearestPointId(change.position, scaledPoints, touchThreshold)
                             },
                             onDragEnd = {
                                 if (dragStartId != null && hoveredPointId != null) {
@@ -118,6 +113,7 @@ fun GameBoard(
                     }
                 }
         ) {
+            // Desenho dos triângulos
             gameState.triangles.forEach { triangle ->
                 val p1 = scaledPoints.find { it.id == triangle.p1Id }
                 val p2 = scaledPoints.find { it.id == triangle.p2Id }
@@ -155,17 +151,12 @@ fun GameBoard(
                             textSize = 50f
                             textAlign = android.graphics.Paint.Align.CENTER
                             isFakeBoldText = true
-                            setShadowLayer(10f, 0f, 0f, android.graphics.Color.argb(
-                                200,
-                                (color.red * 255).toInt(),
-                                (color.green * 255).toInt(),
-                                (color.blue * 255).toInt()
-                            ))
                         }
                     )
                 }
             }
 
+            // Desenho das linhas existentes
             gameState.lines.forEach { line ->
                 val start = scaledPoints.find { it.id == line.startId }
                 val end = scaledPoints.find { it.id == line.endId }
@@ -197,6 +188,7 @@ fun GameBoard(
                 }
             }
 
+            // Desenho da linha de drag atual
             if (dragStartId != null && currentDragPosition != null && enabled) {
                 val startPoint = scaledPoints.find { it.id == dragStartId }
                 if (startPoint != null) {
@@ -204,8 +196,6 @@ fun GameBoard(
                     val isValidMove = hoveredPointId != null && gameState.isValidMove(dragStartId!!, hoveredPointId!!)
                     val isInvalidHover = hoveredPointId != null && !isValidMove
                     
-                    val lineColor = if (isInvalidHover) Color.Red else color.copy(alpha = 0.5f)
-
                     if (hoveredPointId != null) {
                         val endPoint = scaledPoints.find { it.id == hoveredPointId }
                         if (endPoint != null) {
@@ -219,7 +209,7 @@ fun GameBoard(
                         }
                     } else {
                         drawLine(
-                            color = lineColor,
+                            color = color.copy(alpha = 0.5f),
                             start = startPoint.position,
                             end = currentDragPosition!!,
                             strokeWidth = 8f,
@@ -229,6 +219,7 @@ fun GameBoard(
                 }
             }
 
+            // Desenho dos pontos
             scaledPoints.forEach { point ->
                 val isDragStart = point.id == dragStartId
                 val isHovered = point.id == hoveredPointId
@@ -236,10 +227,11 @@ fun GameBoard(
 
                 val currentPlayerColor = getPlayerColor(gameState.currentPlayer)
 
+                // Feedback visual de seleção
                 if (isHovered && dragStartId != null && enabled) {
                     drawCircle(
                         color = if (isInvalidMove) Color.Red.copy(alpha = 0.3f) else currentPlayerColor.copy(alpha = 0.2f),
-                        radius = 40f,
+                        radius = 50f,
                         center = point.position
                     )
                 }
@@ -252,28 +244,30 @@ fun GameBoard(
                     else -> Color(0xFFCCCCCC)
                 }
 
+                // Brilho ao redor do ponto selecionado/focado
                 if (isDragStart || isHovered) {
                     drawCircle(
                         brush = Brush.radialGradient(
                             colors = listOf(pointColor.copy(alpha = 0.6f), Color.Transparent),
                             center = point.position,
-                            radius = 35f
+                            radius = 45f
                         ),
-                        radius = 35f,
+                        radius = 45f,
                         center = point.position
                     )
                 }
 
+                // Ponto físico (Aumentado para facilitar visualização)
                 drawCircle(
                     color = pointColor,
-                    radius = if (isDragStart && enabled) 16f else if (isHovered && dragStartId != null && enabled) 14f else 10f,
+                    radius = if (isDragStart && enabled) 18f else if (isHovered && dragStartId != null && enabled) 16f else 12f,
                     center = point.position
                 )
                 
                 if (isDragStart || isHovered) {
                     drawCircle(
                         color = Color.White,
-                        radius = 6f,
+                        radius = 8f,
                         center = point.position
                     )
                 }
@@ -282,18 +276,18 @@ fun GameBoard(
     }
 }
 
-private fun getNearestPointId(offset: Offset, points: List<DotPoint>): Int? {
+private fun getNearestPointId(offset: Offset, points: List<DotPoint>, threshold: Float): Int? {
     var nearestId: Int? = null
-    var minDistance = Float.MAX_VALUE
+    var minDistanceSq = Float.MAX_VALUE
+    val thresholdSq = threshold * threshold
 
     points.forEach { point ->
-        val distance = sqrt(
-            (offset.x - point.position.x) * (offset.x - point.position.x) +
-                    (offset.y - point.position.y) * (offset.y - point.position.y)
-        )
+        val dx = offset.x - point.position.x
+        val dy = offset.y - point.position.y
+        val distanceSq = dx * dx + dy * dy
 
-        if (distance < minDistance && distance < 100) {
-            minDistance = distance
+        if (distanceSq < thresholdSq && distanceSq < minDistanceSq) {
+            minDistanceSq = distanceSq
             nearestId = point.id
         }
     }
