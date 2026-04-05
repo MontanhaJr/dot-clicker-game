@@ -1,5 +1,6 @@
 package com.montanhajr.pointgame.ui.screens
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +33,7 @@ fun BoardStyleScreen(
     currentStyle: BoardStyle,
     isPremium: Boolean,
     onStyleSelected: (BoardStyle) -> Unit,
+    onSubscribeClick: (Activity) -> Unit,
     onBack: () -> Unit
 ) {
     val isDebug = BuildConfig.DEBUG
@@ -86,7 +88,13 @@ fun BoardStyleScreen(
     }
 
     if (showPremiumDialog) {
-        PremiumDialog(onDismiss = { showPremiumDialog = false })
+        PremiumDialog(
+            onDismiss = { showPremiumDialog = false },
+            onSubscribeClick = { activity ->
+                onSubscribeClick(activity)
+                showPremiumDialog = false
+            }
+        )
     }
 }
 

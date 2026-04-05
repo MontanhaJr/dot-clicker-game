@@ -63,6 +63,9 @@ fun GameModeScreen() {
                 selectedBoardStyle = style
                 prefs.edit().putString("last_board_style", style.name).apply()
             },
+            onSubscribeClick = { activity ->
+                billingManager.launchPurchaseFlow(activity)
+            },
             onBack = { showBoardStyleScreen = false }
         )
         return

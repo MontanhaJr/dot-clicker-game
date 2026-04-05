@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
+import com.montanhajr.pointgame.logic.BillingManager
 import com.montanhajr.pointgame.logic.GameState
 import com.montanhajr.pointgame.models.*
 import com.montanhajr.pointgame.ui.components.AdBanner
@@ -41,6 +42,9 @@ fun DotsGameScreen(
     boardStyle: BoardStyle = BoardStyle.GALAXY,
     onBackToMenu: () -> Unit
 ) {
+    val context = LocalContext.current
+    val billingManager = remember { BillingManager(context) }
+    
     var gameState by remember {
         mutableStateOf(
             GameState.createNew(
@@ -59,7 +63,6 @@ fun DotsGameScreen(
     var restartCountWithoutAd by remember { mutableStateOf(0) }
     
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val scrollState = rememberScrollState()
     
     val density = LocalDensity.current
@@ -155,7 +158,6 @@ fun DotsGameScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // O fundo agora preenche a tela inteira por trás de tudo
         BoardBackground(style = boardStyle)
 
         Column(
@@ -219,7 +221,13 @@ fun DotsGameScreen(
     }
 
     if (showPremiumDialog) {
-        PremiumDialog(onDismiss = { showPremiumDialog = false })
+        PremiumDialog(
+            onDismiss = { showPremiumDialog = false },
+            onSubscribeClick = { activity ->
+                billingManager.launchPurchaseFlow(activity)
+                showPremiumDialog = false
+            }
+        )
     }
 }
 
@@ -269,7 +277,7 @@ fun GameHeader(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = uiColors.headerBg,
-        shadowElevation = 0.dp // Removida sombra para integração fluida
+        shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier
