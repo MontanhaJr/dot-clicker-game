@@ -38,4 +38,8 @@
     <string name="player_won">%s venceu! 🎉</string>
     <string name="player_label">Jogador %s</string>
     <string name="p_label">P%d</string>
+    <string name="premium_button">🚀 Seja Premium</string>
+    <string name="premium_title">⭐ Versão Premium</string>
+    <string name="premium_desc">Remova todos os anúncios para sempre e desbloqueie TODAS as personalizações de estilo de tabuleiro!</string>
+    <string name="premium_subscribe">Assinar Agora</string>
 </resources>
