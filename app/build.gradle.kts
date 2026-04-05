@@ -23,6 +23,19 @@ android {
             buildConfigField("String", "AD_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
         }
+        
+        create("staging") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            
+            // Comportamento de Produção (DEBUG = false), mas com IDs de Teste
+            buildConfigField("String", "AD_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+            
+            // Usa chave de debug para facilitar a instalação no celular
+            signingConfig = signingConfigs.getByName("debug")
+        }
+
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -55,6 +68,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.google.play.services.ads)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -23,11 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.GameState
-import com.montanhajr.pointgame.models.Difficulty
-import com.montanhajr.pointgame.models.GameMode
-import com.montanhajr.pointgame.models.PlayerColors
+import com.montanhajr.pointgame.models.*
 import com.montanhajr.pointgame.ui.components.AdBanner
 import com.montanhajr.pointgame.ui.components.AdManager
+import com.montanhajr.pointgame.ui.components.BoardBackground
 import com.montanhajr.pointgame.ui.components.GameBoard
 import com.montanhajr.pointgame.ui.components.PremiumDialog
 import kotlinx.coroutines.delay
@@ -39,6 +38,7 @@ fun DotsGameScreen(
     difficulty: Difficulty?,
     numPlayers: Int,
     playerNames: List<String>? = null,
+    boardStyle: BoardStyle = BoardStyle.GALAXY,
     onBackToMenu: () -> Unit
 ) {
     var gameState by remember {
@@ -47,7 +47,8 @@ fun DotsGameScreen(
                 isCpuGame = gameMode == GameMode.VS_CPU,
                 difficulty = difficulty ?: Difficulty.MEDIUM,
                 numPlayers = numPlayers,
-                playerNames = playerNames
+                playerNames = playerNames,
+                boardStyle = boardStyle
             )
         )
     }
@@ -69,6 +70,8 @@ fun DotsGameScreen(
     val connectionSound = remember { MediaPlayer.create(context, R.raw.connection) }
     val playerPointSound = remember { MediaPlayer.create(context, R.raw.player_point) }
     val cpuPointSound = remember { MediaPlayer.create(context, R.raw.cpu_point) }
+
+    val uiColors = remember(boardStyle) { getStyleUiColors(boardStyle) }
 
     LaunchedEffect(Unit) {
         AdManager.loadInterstitial(context)
@@ -116,7 +119,8 @@ fun DotsGameScreen(
             isCpuGame = gameMode == GameMode.VS_CPU,
             difficulty = difficulty ?: Difficulty.MEDIUM,
             numPlayers = numPlayers,
-            playerNames = playerNames
+            playerNames = playerNames,
+            boardStyle = boardStyle
         )
         showRestartDialog = false
     }
@@ -150,54 +154,57 @@ fun DotsGameScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF110d1e))
-            .statusBarsPadding()
-    ) {
-        GameHeader(
-            gameState = gameState,
-            gameMode = gameMode,
-            scrollState = scrollState,
-            onNewGame = {
-                if (gameState.gameOver) {
-                    handleRestartLogic()
-                } else {
-                    showRestartDialog = true
-                }
-            },
-            onShowRules = { showRulesDialog = true },
-            onBackToMenu = onBackToMenu
-        )
+    Box(modifier = Modifier.fillMaxSize()) {
+        // O fundo agora preenche a tela inteira por trás de tudo
+        BoardBackground(style = boardStyle)
 
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            GameBoard(
+            GameHeader(
                 gameState = gameState,
-                enabled = gameMode != GameMode.VS_CPU || gameState.currentPlayer == 1,
-                onLineDrawn = { startId, endId ->
-                    val previousTriangles = gameState.triangles.size
-                    gameState = gameState.drawLine(startId, endId)
-
-                    scope.launch {
-                        try {
-                            if (gameState.triangles.size > previousTriangles) {
-                                playerPointSound?.start()
-                            } else {
-                                connectionSound?.start()
-                            }
-                        } catch (e: Exception) {}
+                gameMode = gameMode,
+                scrollState = scrollState,
+                uiColors = uiColors,
+                onNewGame = {
+                    if (gameState.gameOver) {
+                        handleRestartLogic()
+                    } else {
+                        showRestartDialog = true
                     }
-                }
+                },
+                onShowRules = { showRulesDialog = true },
+                onBackToMenu = onBackToMenu
             )
-        }
 
-        AdBanner(onPremiumClick = { showPremiumDialog = true })
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                GameBoard(
+                    gameState = gameState,
+                    enabled = gameMode != GameMode.VS_CPU || gameState.currentPlayer == 1,
+                    onLineDrawn = { startId, endId ->
+                        val previousTriangles = gameState.triangles.size
+                        gameState = gameState.drawLine(startId, endId)
+
+                        scope.launch {
+                            try {
+                                if (gameState.triangles.size > previousTriangles) {
+                                    playerPointSound?.start()
+                                } else {
+                                    connectionSound?.start()
+                                }
+                            } catch (e: Exception) {}
+                        }
+                    }
+                )
+            }
+
+            AdBanner(onPremiumClick = { showPremiumDialog = true })
+        }
     }
 
     if (showRulesDialog) {
@@ -254,17 +261,20 @@ fun GameHeader(
     gameState: GameState,
     gameMode: GameMode,
     scrollState: ScrollState,
+    uiColors: UiThemeColors,
     onNewGame: () -> Unit,
     onShowRules: () -> Unit,
     onBackToMenu: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFF1A1A2E),
-        shadowElevation = 8.dp
+        color = uiColors.headerBg,
+        shadowElevation = 0.dp // Removida sombra para integração fluida
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -275,9 +285,9 @@ fun GameHeader(
                     onClick = onBackToMenu,
                     contentPadding = PaddingValues(horizontal = 12.dp),
                     modifier = Modifier.height(36.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF303050))
+                    colors = ButtonDefaults.buttonColors(containerColor = if (uiColors.isDark) Color(0xFF303050).copy(alpha = 0.6f) else Color.Gray.copy(alpha = 0.2f))
                 ) {
-                    Text(stringResource(R.string.menu), fontSize = 14.sp, color = Color.White)
+                    Text(stringResource(R.string.menu), fontSize = 14.sp, color = uiColors.text)
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -285,17 +295,17 @@ fun GameHeader(
                         onClick = onShowRules,
                         contentPadding = PaddingValues(horizontal = 12.dp),
                         modifier = Modifier.height(36.dp),
-                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF303050))
+                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = if (uiColors.isDark) Color(0xFF303050).copy(alpha = 0.6f) else Color.Gray.copy(alpha = 0.2f))
                     ) {
-                        Text(stringResource(R.string.rules), fontSize = 14.sp, color = Color.White)
+                        Text(stringResource(R.string.rules), fontSize = 14.sp, color = uiColors.text)
                     }
                     FilledTonalButton(
                         onClick = onNewGame,
                         contentPadding = PaddingValues(horizontal = 12.dp),
                         modifier = Modifier.height(36.dp),
-                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF303050))
+                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = if (uiColors.isDark) Color(0xFF303050).copy(alpha = 0.6f) else Color.Gray.copy(alpha = 0.2f))
                     ) {
-                        Text(stringResource(R.string.new_game), fontSize = 14.sp, color = Color.White)
+                        Text(stringResource(R.string.new_game), fontSize = 14.sp, color = uiColors.text)
                     }
                 }
             }
@@ -312,13 +322,14 @@ fun GameHeader(
             ) {
                 gameState.playerNames.forEachIndexed { index, name ->
                     val isCpu = gameMode == GameMode.VS_CPU && index == 1
-                    val playerColor = if (isCpu) Color(0xFFE0E0E0) else PlayerColors[index % PlayerColors.size]
+                    val playerColor = getStylePlayerColor(gameState.boardStyle, index + 1, gameMode == GameMode.VS_CPU)
                     
                     PlayerScoreCompact(
                         playerName = if (isCpu) "CPU" else name,
                         score = gameState.playerScores[index],
                         color = playerColor,
-                        isActive = gameState.currentPlayer == index + 1
+                        isActive = gameState.currentPlayer == index + 1,
+                        uiColors = uiColors
                     )
                 }
             }
@@ -336,7 +347,7 @@ fun GameHeader(
                     text = winnerMessage,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF00FF00),
+                    color = if (uiColors.isDark) Color(0xFF00FF00) else Color(0xFF008000),
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 4.dp)
                 )
             }
@@ -345,12 +356,12 @@ fun GameHeader(
 }
 
 @Composable
-fun PlayerScoreCompact(playerName: String, score: Int, color: Color, isActive: Boolean) {
+fun PlayerScoreCompact(playerName: String, score: Int, color: Color, isActive: Boolean, uiColors: UiThemeColors) {
     Surface(
         modifier = Modifier.width(90.dp),
         shape = MaterialTheme.shapes.small,
-        color = if (isActive) color.copy(alpha = 0.25f) else Color.Transparent,
-        border = if (isActive) BorderStroke(2.dp, color) else BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
+        color = if (isActive) color.copy(alpha = 0.2f) else Color.Transparent,
+        border = if (isActive) BorderStroke(2.dp, color) else BorderStroke(1.dp, if (uiColors.isDark) Color.Gray.copy(alpha = 0.3f) else Color.Black.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
@@ -361,7 +372,7 @@ fun PlayerScoreCompact(playerName: String, score: Int, color: Color, isActive: B
                 text = playerName,
                 fontSize = 14.sp,
                 fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                color = if (isActive) color else Color.LightGray,
+                color = if (isActive) color else if (uiColors.isDark) Color.LightGray else Color.Gray,
                 maxLines = 1
             )
             Spacer(modifier = Modifier.height(2.dp))

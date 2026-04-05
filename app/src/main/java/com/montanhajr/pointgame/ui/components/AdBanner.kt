@@ -32,21 +32,20 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .height(60.dp) // Aumentado levemente para caber mais detalhes
-            .background(Color(0xFF1A1A2E)),
+            .height(60.dp),
         contentAlignment = Alignment.Center
     ) {
         if (adFailed) {
-            // Fallback: Banner Premium com estética de AdMob
+            // Fallback: Banner Premium com fundo semi-transparente para ver o background do tabuleiro
             Row(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
                     .border(1.dp, Color(0xFFFFD700).copy(alpha = 0.3f))
                     .clickable { onPremiumClick?.invoke() }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Pequena tag "AD" ou "PROMO" similar ao AdMob
                 Box(
                     modifier = Modifier
                         .background(Color(0xFFFFD700), RoundedCornerShape(2.dp))
@@ -84,7 +83,6 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Botão de ação estilo CTA do AdMob
                 Surface(
                     shape = RoundedCornerShape(4.dp),
                     color = Color(0xFFFFD700),
@@ -104,6 +102,8 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
                 }
             }
         } else {
+            // AdView por padrão tem fundo transparente ou branco dependendo do ad, 
+            // mas o container Box agora é transparente
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { context ->
@@ -123,7 +123,6 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
     }
 }
 
-// Helper para manter o Surface sem precisar de muitos imports de material3 extras
 @Composable
 private fun Surface(
     modifier: Modifier = Modifier,

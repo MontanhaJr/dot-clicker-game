@@ -1,21 +1,25 @@
 package com.montanhajr.pointgame.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
+import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.models.Difficulty
 import com.montanhajr.pointgame.models.GameMode
 import com.montanhajr.pointgame.models.PlayerColors
@@ -24,24 +28,56 @@ import com.montanhajr.pointgame.ui.components.PremiumDialog
 
 @Composable
 fun GameModeScreen() {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("game_prefs", Context.MODE_PRIVATE) }
+    
     var gameMode by remember { mutableStateOf<GameMode?>(null) }
     var difficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
     var numPlayers by remember { mutableIntStateOf(3) }
     var playerNames by remember { mutableStateOf<List<String>?>(null) }
+    
+    // Carrega o estilo salvo ou o padrão (GALAXY)
+    var selectedBoardStyle by remember { 
+        val savedStyleName = prefs.getString("last_board_style", BoardStyle.GALAXY.name)
+        mutableStateOf(try {
+            BoardStyle.valueOf(savedStyleName ?: BoardStyle.GALAXY.name)
+        } catch (e: Exception) {
+            BoardStyle.GALAXY
+        })
+    }
+    
     var showDifficultyDialog by remember { mutableStateOf(false) }
     var showMultiplayerDialog by remember { mutableStateOf(false) }
     var showPremiumDialog by remember { mutableStateOf(false) }
+    var showBoardStyleScreen by remember { mutableStateOf(false) }
     var startGame by remember { mutableStateOf(false) }
+    
+    val isPremium by remember { mutableStateOf(false) }
+
+    if (showBoardStyleScreen) {
+        BoardStyleScreen(
+            currentStyle = selectedBoardStyle,
+            isPremium = isPremium,
+            onStyleSelected = { style ->
+                selectedBoardStyle = style
+                // Salva a escolha do usuário permanentemente
+                prefs.edit().putString("last_board_style", style.name).apply()
+            },
+            onBack = { showBoardStyleScreen = false }
+        )
+        return
+    }
 
     Scaffold(
         floatingActionButton = {
-            if (gameMode == null) {
+            if (gameMode == null && !isPremium) {
                 ExtendedFloatingActionButton(
                     onClick = { showPremiumDialog = true },
-                    containerColor = Color(0xFFFFD700), // Gold
+                    containerColor = Color(0xFFFFD700),
                     contentColor = Color(0xFF1A1A2E),
                     icon = { Icon(Icons.Default.Star, contentDescription = null) },
-                    text = { Text(stringResource(R.string.premium_button), fontWeight = FontWeight.Bold) }
+                    text = { Text(stringResource(R.string.premium_button), fontWeight = FontWeight.Bold) },
+                    modifier = Modifier.padding(bottom = 16.dp, end = 8.dp)
                 )
             }
         }
@@ -52,14 +88,12 @@ fun GameModeScreen() {
                     GameModeSelection(
                         onTwoPlayers = { 
                             gameMode = GameMode.TWO_PLAYERS
-                            playerNames = listOf(
-                                "Player 1",
-                                "Player 2"
-                            )
+                            playerNames = listOf("Player 1", "Player 2")
                             startGame = true
                          },
                         onVsCpu = { showDifficultyDialog = true },
-                        onMultiplayer = { showMultiplayerDialog = true }
+                        onMultiplayer = { showMultiplayerDialog = true },
+                        onOpenBoardStyles = { showBoardStyleScreen = true }
                     )
                 }
                 gameMode == GameMode.TWO_PLAYERS && startGame -> {
@@ -68,6 +102,7 @@ fun GameModeScreen() {
                         difficulty = null,
                         numPlayers = 2,
                         playerNames = playerNames,
+                        boardStyle = selectedBoardStyle,
                         onBackToMenu = { 
                             gameMode = null
                             startGame = false
@@ -80,6 +115,7 @@ fun GameModeScreen() {
                         gameMode = GameMode.VS_CPU,
                         difficulty = difficulty,
                         numPlayers = 2,
+                        boardStyle = selectedBoardStyle,
                         onBackToMenu = {
                             gameMode = null
                             startGame = false
@@ -92,6 +128,7 @@ fun GameModeScreen() {
                         difficulty = null,
                         numPlayers = numPlayers,
                         playerNames = playerNames,
+                        boardStyle = selectedBoardStyle,
                         onBackToMenu = {
                             gameMode = null
                             startGame = false
@@ -136,22 +173,32 @@ fun GameModeScreen() {
 }
 
 @Composable
-fun GameModeSelection(onTwoPlayers: () -> Unit, onVsCpu: () -> Unit, onMultiplayer: () -> Unit) {
+fun GameModeSelection(
+    onTwoPlayers: () -> Unit, 
+    onVsCpu: () -> Unit, 
+    onMultiplayer: () -> Unit,
+    onOpenBoardStyles: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F0F1A)),
-        contentAlignment = Alignment.Center
+            .background(Color(0xFF0F0F1A))
     ) {
         GalaxyBackground()
         
+        // Conteúdo Principal
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Espaçador no topo para evitar que o conteúdo bata no botão de estilos e barra de status
+            Spacer(modifier = Modifier.height(100.dp))
+
             Text(
                 text = stringResource(R.string.game_title),
                 fontSize = 32.sp,
@@ -159,13 +206,15 @@ fun GameModeSelection(onTwoPlayers: () -> Unit, onVsCpu: () -> Unit, onMultiplay
                 color = Color.White
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = stringResource(R.string.choose_game_mode),
                 fontSize = 18.sp,
                 color = Color.LightGray.copy(alpha = 0.8f)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
             MenuButton(
                 text = stringResource(R.string.two_players),
@@ -173,16 +222,39 @@ fun GameModeSelection(onTwoPlayers: () -> Unit, onVsCpu: () -> Unit, onMultiplay
                 onClick = onTwoPlayers
             )
 
+            Spacer(modifier = Modifier.height(24.dp))
+
             MenuButton(
                 text = stringResource(R.string.multiplayer),
                 color = Color(0xFF9C27B0),
                 onClick = onMultiplayer
             )
 
+            Spacer(modifier = Modifier.height(24.dp))
+
             MenuButton(
                 text = stringResource(R.string.vs_cpu),
                 color = Color(0xFFE91E63),
                 onClick = onVsCpu
+            )
+            
+            Spacer(modifier = Modifier.height(140.dp))
+        }
+
+        // Botão de Estilos movido para DEPOIS da Column no Box para garantir que fique no topo do Z-order (clicável)
+        IconButton(
+            onClick = onOpenBoardStyles,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(16.dp)
+                .size(48.dp)
+                .background(Color(0xFF303050).copy(alpha = 0.8f), MaterialTheme.shapes.medium)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Brush,
+                contentDescription = "Board Styles",
+                tint = Color.White
             )
         }
     }
@@ -194,7 +266,7 @@ fun MenuButton(text: String, color: Color, onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp),
+            .height(64.dp),
         shape = MaterialTheme.shapes.medium,
         border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.6f)),
         colors = ButtonDefaults.outlinedButtonColors(

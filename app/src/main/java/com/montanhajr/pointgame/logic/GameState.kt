@@ -15,14 +15,16 @@ data class GameState(
     val numPlayers: Int,
     val gameOver: Boolean = false,
     val isCpuGame: Boolean = false,
-    val difficulty: Difficulty = Difficulty.MEDIUM
+    val difficulty: Difficulty = Difficulty.MEDIUM,
+    val boardStyle: BoardStyle = BoardStyle.GALAXY
 ) {
     companion object {
         fun createNew(
             isCpuGame: Boolean = false,
             difficulty: Difficulty = Difficulty.MEDIUM,
             numPlayers: Int = 2,
-            playerNames: List<String>? = null
+            playerNames: List<String>? = null,
+            boardStyle: BoardStyle = BoardStyle.GALAXY
         ): GameState {
             val random = Random(System.currentTimeMillis())
             val numPoints = 18 + random.nextInt(8)
@@ -62,7 +64,8 @@ data class GameState(
                 playerNames = names,
                 numPlayers = numPlayers,
                 isCpuGame = isCpuGame,
-                difficulty = difficulty
+                difficulty = difficulty,
+                boardStyle = boardStyle
             )
         }
     }
@@ -72,14 +75,16 @@ data class GameState(
 
         val newLine = Line(startId, endId, currentPlayer)
         val newLines = lines + newLine
-        val newTriangles = findNewTriangles(newLines)
-        val trianglesCompleted = newTriangles.size > triangles.size
         
-        val newScores = MutableList(numPlayers) { 0 }
-        newTriangles.forEach { tri ->
-            if (tri.owner in 1..numPlayers) {
-                newScores[tri.owner - 1]++
-            }
+        // OTIMIZAÇÃO: Busca apenas triângulos que usam a nova linha
+        val newlyFoundTriangles = findTrianglesForLine(newLine, newLines)
+        val newTriangles = triangles + newlyFoundTriangles
+        
+        val trianglesCompleted = newlyFoundTriangles.isNotEmpty()
+        
+        val newScores = playerScores.toMutableList()
+        if (trianglesCompleted) {
+            newScores[currentPlayer - 1] += newlyFoundTriangles.size
         }
 
         val isGameOver = !hasValidMovesLeft(newLines, newTriangles)
@@ -101,6 +106,27 @@ data class GameState(
             playerScores = newScores,
             gameOver = isGameOver
         )
+    }
+
+    private fun findTrianglesForLine(lastLine: Line, allLines: List<Line>): List<Triangle> {
+        val found = mutableListOf<Triangle>()
+        val a = lastLine.startId
+        val b = lastLine.endId
+        
+        for (p in points) {
+            val c = p.id
+            if (c == a || c == b) continue
+            
+            val hasAC = allLines.any { (it.startId == a && it.endId == c) || (it.startId == c && it.endId == a) }
+            val hasBC = allLines.any { (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
+            
+            if (hasAC && hasBC) {
+                if (!hasAnyPointInside(a, b, c) && !hasLinesCrossing(a, b, c, allLines)) {
+                    found.add(Triangle(a, b, c, lastLine.player))
+                }
+            }
+        }
+        return found
     }
 
     fun getCpuMove(): Pair<Int, Int>? {
@@ -133,31 +159,6 @@ data class GameState(
         if (edges.any { doLinesIntersect(lineStart, lineEnd, it.first, it.second) }) return true
         if (isPointInsideTriangle(lineStart, p1, p2, p3) && isPointInsideTriangle(lineEnd, p1, p2, p3)) return true
         return false
-    }
-
-    fun findNewTriangles(allLines: List<Line>): List<Triangle> {
-        val found = mutableListOf<Triangle>()
-        val ids = points.map { it.id }
-        for (i in ids.indices) {
-            for (j in i + 1 until ids.size) {
-                for (k in j + 1 until ids.size) {
-                    val p1 = ids[i]; val p2 = ids[j]; val p3 = ids[k]
-                    val hasL12 = allLines.any { (it.startId == p1 && it.endId == p2) || (it.startId == p2 && it.endId == p1) }
-                    val hasL23 = allLines.any { (it.startId == p2 && it.endId == p3) || (it.startId == p3 && it.endId == p2) }
-                    val hasL31 = allLines.any { (it.startId == p3 && it.endId == p1) || (it.startId == p1 && it.endId == p3) }
-                    if (hasL12 && hasL23 && hasL31) {
-                        if (!hasAnyPointInside(p1, p2, p3) && !hasLinesCrossing(p1, p2, p3, allLines)) {
-                            val lastLine = allLines.lastOrNull { l -> setOf(l.startId, l.endId).intersect(setOf(p1, p2, p3)).size == 2 }
-                            val owner = lastLine?.player ?: currentPlayer
-                            if (found.none { setOf(it.p1Id, it.p2Id, it.p3Id) == setOf(p1, p2, p3) }) {
-                                found.add(Triangle(p1, p2, p3, owner))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return found
     }
 
     internal fun hasAnyPointInside(p1Id: Int, p2Id: Int, p3Id: Int): Boolean {

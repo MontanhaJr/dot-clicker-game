@@ -2,6 +2,7 @@ package com.montanhajr.pointgame.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -26,19 +27,18 @@ fun GalaxyBackground() {
         Color(0xFFFF69B4), // Pink
         Color(0xFF00FFFF), // Cyan
         Color(0xFFADFF2F), // GreenYellow
-        Color(0xFFFFFFFF), // White
         Color(0xFFFF4500)  // OrangeRed
     )
 
     val stars = remember {
         val random = Random(42)
-        List(150) {
+        List(135) {
             Star(
                 xRel = random.nextFloat(),
                 yRel = random.nextFloat(),
                 radius = random.nextFloat() * 2.5f + 1f,
                 color = starColors[random.nextInt(starColors.size)],
-                animDuration = random.nextInt(4000, 8000), // Mais lento
+                animDuration = random.nextInt(4000, 8000),
                 animDelay = random.nextInt(0, 10000)
             )
         }
@@ -46,7 +46,6 @@ fun GalaxyBackground() {
 
     val infiniteTransition = rememberInfiniteTransition(label = "GalaxyStars")
     
-    // Aumentamos o ciclo global para reduzir saltos e suavizar
     val timeFactor by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -57,7 +56,8 @@ fun GalaxyBackground() {
         label = "TimeFactor"
     )
 
-    Canvas(modifier = Modifier.fillMaxSize()) {
+    // Fundo preto fixo para a galáxia
+    Canvas(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A1A))) {
         stars.forEach { star ->
             val x = star.xRel * size.width
             val y = star.yRel * size.height
@@ -66,9 +66,8 @@ fun GalaxyBackground() {
             val starTime = (globalTime + star.animDelay) % star.animDuration
             val starProgress = starTime.toFloat() / star.animDuration
             
-            // Seno para suavizar as transições e evitar cortes bruscos
             val wave = kotlin.math.sin(starProgress * 2 * kotlin.math.PI).toFloat()
-            val intensity = (wave + 1f) / 2f // Transforma -1..1 em 0..1
+            val intensity = (wave + 1f) / 2f
             
             val currentAlpha = (0.15f + (intensity * 0.55f)).coerceIn(0f, 1f)
             val currentRadius = star.radius * (0.85f + (intensity * 0.3f))
