@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.BillingManager
 import com.montanhajr.pointgame.logic.GameState
+import com.montanhajr.pointgame.logic.StatisticsManager
 import com.montanhajr.pointgame.models.*
 import com.montanhajr.pointgame.ui.components.AdBanner
 import com.montanhajr.pointgame.ui.components.AdManager
@@ -44,6 +45,7 @@ fun DotsGameScreen(
 ) {
     val context = LocalContext.current
     val billingManager = remember { BillingManager(context) }
+    val statsManager = remember { StatisticsManager(context) }
     
     var gameState by remember {
         mutableStateOf(
@@ -61,6 +63,7 @@ fun DotsGameScreen(
     var showRestartDialog by remember { mutableStateOf(false) }
     var showPremiumDialog by remember { mutableStateOf(false) }
     var restartCountWithoutAd by remember { mutableStateOf(0) }
+    var matchStartTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
     
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -85,6 +88,36 @@ fun DotsGameScreen(
             connectionSound?.release()
             playerPointSound?.release()
             cpuPointSound?.release()
+        }
+    }
+
+    // Record stats when game ends
+    LaunchedEffect(gameState.gameOver) {
+        if (gameState.gameOver) {
+            val duration = System.currentTimeMillis() - matchStartTime
+            
+            // OTIMIZAÇÃO: Record only triangles formed by HUMAN players (exclude CPU at index 1 in VS_CPU mode)
+            val humanTriangles = if (gameMode == GameMode.VS_CPU) {
+                gameState.playerScores[0] // Only P1
+            } else {
+                gameState.playerScores.sum() // All humans in multiplayer
+            }
+            statsManager.addTriangles(humanTriangles)
+            
+            // Record match result for CPU games
+            if (gameMode == GameMode.VS_CPU) {
+                val player1Score = gameState.playerScores[0]
+                val cpuScore = gameState.playerScores[1]
+                val result = when {
+                    player1Score > cpuScore -> StatisticsManager.MatchResult.WIN
+                    player1Score < cpuScore -> StatisticsManager.MatchResult.LOSS
+                    else -> StatisticsManager.MatchResult.DRAW
+                }
+                statsManager.recordMatch(difficulty, result, duration)
+            } else {
+                // For non-CPU games, just record the time and a generic match count
+                statsManager.recordMatch(null, StatisticsManager.MatchResult.DRAW, duration)
+            }
         }
     }
 
@@ -125,6 +158,7 @@ fun DotsGameScreen(
             playerNames = playerNames,
             boardStyle = boardStyle
         )
+        matchStartTime = System.currentTimeMillis() // Reset timer
         showRestartDialog = false
     }
 

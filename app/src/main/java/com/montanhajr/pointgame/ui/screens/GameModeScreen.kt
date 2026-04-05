@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,10 +38,9 @@ fun GameModeScreen() {
     
     var gameMode by remember { mutableStateOf<GameMode?>(null) }
     var difficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
-    var numPlayers by remember { mutableIntStateOf(2) } // Alterado para 2 por padrão
+    var numPlayers by remember { mutableIntStateOf(2) }
     var playerNames by remember { mutableStateOf<List<String>?>(null) }
     
-    // Carrega o estilo salvo ou o padrão (GALAXY)
     var selectedBoardStyle by remember { 
         val savedStyleName = prefs.getString("last_board_style", BoardStyle.GALAXY.name)
         mutableStateOf(try {
@@ -54,10 +54,14 @@ fun GameModeScreen() {
     var showMultiplayerDialog by remember { mutableStateOf(false) }
     var showPremiumDialog by remember { mutableStateOf(false) }
     var showBoardStyleScreen by remember { mutableStateOf(false) }
+    var showStatsScreen by remember { mutableStateOf(false) }
     var startGame by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
+            showStatsScreen -> {
+                StatsScreen(onBack = { showStatsScreen = false })
+            }
             showBoardStyleScreen -> {
                 BoardStyleScreen(
                     currentStyle = selectedBoardStyle,
@@ -104,16 +108,17 @@ fun GameModeScreen() {
                     GameModeSelection(
                         onTwoPlayers = { 
                             gameMode = GameMode.TWO_PLAYERS
-                            numPlayers = 2 // Garante 2 jogadores
+                            numPlayers = 2
                             playerNames = listOf("Player 1", "Player 2")
                             startGame = true
                          },
                         onVsCpu = { showDifficultyDialog = true },
                         onMultiplayer = { 
-                            numPlayers = 3 // Reinicia para 3 antes de abrir o seletor multiplayer
+                            numPlayers = 3
                             showMultiplayerDialog = true 
                         },
-                        onOpenBoardStyles = { showBoardStyleScreen = true }
+                        onOpenBoardStyles = { showBoardStyleScreen = true },
+                        onOpenStats = { showStatsScreen = true }
                     )
                 }
             }
@@ -126,7 +131,7 @@ fun GameModeScreen() {
             onDifficultyChanged = { difficulty = it },
             onStartGame = {
                 gameMode = GameMode.VS_CPU
-                numPlayers = 2 // Garante 2 jogadores (Humano vs CPU)
+                numPlayers = 2
                 startGame = true
                 showDifficultyDialog = false
             },
@@ -363,7 +368,8 @@ fun GameModeSelection(
     onTwoPlayers: () -> Unit, 
     onVsCpu: () -> Unit, 
     onMultiplayer: () -> Unit,
-    onOpenBoardStyles: () -> Unit
+    onOpenBoardStyles: () -> Unit,
+    onOpenStats: () -> Unit
 ) {
     val scrollState = rememberScrollState()
     
@@ -425,19 +431,37 @@ fun GameModeSelection(
             Spacer(modifier = Modifier.height(140.dp))
         }
 
-        Box(
+        // Botoes fixos no topo
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            // Stats button (Esquerda)
+            Surface(
+                onClick = onOpenStats,
+                shape = MaterialTheme.shapes.medium,
+                color = Color(0xFF303050).copy(alpha = 0.8f),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Timeline,
+                        contentDescription = "Stats",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            // Style button (Direita)
             Surface(
                 onClick = onOpenBoardStyles,
                 shape = MaterialTheme.shapes.medium,
                 color = Color(0xFF303050).copy(alpha = 0.8f),
-                modifier = Modifier
-                    .size(48.dp)
-                    .align(Alignment.TopEnd)
+                modifier = Modifier.size(48.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
