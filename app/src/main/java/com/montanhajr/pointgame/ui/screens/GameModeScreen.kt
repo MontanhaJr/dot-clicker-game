@@ -40,6 +40,7 @@ fun GameModeScreen() {
     var numPlayers by remember { mutableIntStateOf(3) }
     var playerNames by remember { mutableStateOf<List<String>?>(null) }
     
+    // Carrega o estilo salvo ou o padrão (GALAXY)
     var selectedBoardStyle by remember { 
         val savedStyleName = prefs.getString("last_board_style", BoardStyle.GALAXY.name)
         mutableStateOf(try {
@@ -55,39 +56,51 @@ fun GameModeScreen() {
     var showBoardStyleScreen by remember { mutableStateOf(false) }
     var startGame by remember { mutableStateOf(false) }
 
-    if (showBoardStyleScreen) {
-        BoardStyleScreen(
-            currentStyle = selectedBoardStyle,
-            isPremium = isPremium,
-            onStyleSelected = { style ->
-                selectedBoardStyle = style
-                prefs.edit().putString("last_board_style", style.name).apply()
-            },
-            onSubscribeClick = { activity ->
-                billingManager.launchPurchaseFlow(activity)
-            },
-            onBack = { showBoardStyleScreen = false }
-        )
-        return
-    }
-
-    Scaffold(
-        floatingActionButton = {
-            if (gameMode == null && !isPremium) {
-                ExtendedFloatingActionButton(
-                    onClick = { showPremiumDialog = true },
-                    containerColor = Color(0xFFFFD700),
-                    contentColor = Color(0xFF1A1A2E),
-                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
-                    text = { Text(stringResource(R.string.premium_button), fontWeight = FontWeight.Bold) },
-                    modifier = Modifier.padding(bottom = 16.dp, end = 8.dp)
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            showBoardStyleScreen -> {
+                BoardStyleScreen(
+                    currentStyle = selectedBoardStyle,
+                    isPremium = isPremium,
+                    onStyleSelected = { style ->
+                        selectedBoardStyle = style
+                        prefs.edit().putString("last_board_style", style.name).apply()
+                    },
+                    onSubscribeClick = { activity ->
+                        billingManager.launchPurchaseFlow(activity)
+                    },
+                    onBack = { showBoardStyleScreen = false }
                 )
             }
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            when {
-                gameMode == null -> {
+            gameMode != null && startGame -> {
+                DotsGameScreen(
+                    gameMode = gameMode!!,
+                    difficulty = difficulty,
+                    numPlayers = numPlayers,
+                    playerNames = playerNames,
+                    boardStyle = selectedBoardStyle,
+                    onBackToMenu = { 
+                        gameMode = null
+                        startGame = false
+                        playerNames = null
+                    }
+                )
+            }
+            else -> {
+                Scaffold(
+                    containerColor = Color.Transparent,
+                    floatingActionButton = {
+                        if (!isPremium) {
+                            ExtendedFloatingActionButton(
+                                onClick = { showPremiumDialog = true },
+                                containerColor = Color(0xFFFFD700),
+                                contentColor = Color(0xFF1A1A2E),
+                                icon = { Icon(Icons.Default.Star, contentDescription = null) },
+                                text = { Text(stringResource(R.string.premium_button), fontWeight = FontWeight.Bold) }
+                            )
+                        }
+                    }
+                ) { _ ->
                     GameModeSelection(
                         onTwoPlayers = { 
                             gameMode = GameMode.TWO_PLAYERS
@@ -97,46 +110,6 @@ fun GameModeScreen() {
                         onVsCpu = { showDifficultyDialog = true },
                         onMultiplayer = { showMultiplayerDialog = true },
                         onOpenBoardStyles = { showBoardStyleScreen = true }
-                    )
-                }
-                gameMode == GameMode.TWO_PLAYERS && startGame -> {
-                    DotsGameScreen(
-                        gameMode = GameMode.TWO_PLAYERS,
-                        difficulty = null,
-                        numPlayers = 2,
-                        playerNames = playerNames,
-                        boardStyle = selectedBoardStyle,
-                        onBackToMenu = { 
-                            gameMode = null
-                            startGame = false
-                            playerNames = null
-                         }
-                    )
-                }
-                gameMode == GameMode.VS_CPU && startGame -> {
-                    DotsGameScreen(
-                        gameMode = GameMode.VS_CPU,
-                        difficulty = difficulty,
-                        numPlayers = 2,
-                        boardStyle = selectedBoardStyle,
-                        onBackToMenu = {
-                            gameMode = null
-                            startGame = false
-                        }
-                    )
-                }
-                gameMode == GameMode.MULTIPLAYER && startGame -> {
-                    DotsGameScreen(
-                        gameMode = GameMode.MULTIPLAYER,
-                        difficulty = null,
-                        numPlayers = numPlayers,
-                        playerNames = playerNames,
-                        boardStyle = selectedBoardStyle,
-                        onBackToMenu = {
-                            gameMode = null
-                            startGame = false
-                            playerNames = null
-                        }
                     )
                 }
             }
@@ -182,109 +155,95 @@ fun GameModeScreen() {
 }
 
 @Composable
-fun GameModeSelection(
-    onTwoPlayers: () -> Unit, 
-    onVsCpu: () -> Unit, 
-    onMultiplayer: () -> Unit,
-    onOpenBoardStyles: () -> Unit
+fun DifficultyDialog(
+    selectedDifficulty: Difficulty,
+    onDifficultyChanged: (Difficulty) -> Unit,
+    onStartGame: () -> Unit,
+    onDismiss: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
-    
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0F0F1A))
-    ) {
-        GalaxyBackground()
-        
-        IconButton(
-            onClick = onOpenBoardStyles,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(16.dp)
-                .size(48.dp)
-                .background(Color(0xFF303050).copy(alpha = 0.8f), MaterialTheme.shapes.medium)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Brush,
-                contentDescription = "Board Styles",
-                tint = Color.White
-            )
-        }
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(100.dp))
-
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1A1A2E),
+        titleContentColor = Color.White,
+        textContentColor = Color.LightGray,
+        title = {
             Text(
-                text = stringResource(R.string.game_title),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+                text = stringResource(R.string.choose_difficulty),
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
             )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                DifficultyOption(
+                    title = stringResource(R.string.easy_title),
+                    description = stringResource(R.string.easy_desc),
+                    isSelected = selectedDifficulty == Difficulty.EASY,
+                    onClick = { onDifficultyChanged(Difficulty.EASY) }
+                )
+                DifficultyOption(
+                    title = stringResource(R.string.medium_title),
+                    description = stringResource(R.string.medium_desc),
+                    isSelected = selectedDifficulty == Difficulty.MEDIUM,
+                    onClick = { onDifficultyChanged(Difficulty.MEDIUM) }
+                )
+                DifficultyOption(
+                    title = stringResource(R.string.hard_title),
+                    description = stringResource(R.string.hard_desc),
+                    isSelected = selectedDifficulty == Difficulty.HARD,
+                    onClick = { onDifficultyChanged(Difficulty.HARD) }
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = stringResource(R.string.choose_game_mode),
-                fontSize = 18.sp,
-                color = Color.LightGray.copy(alpha = 0.8f)
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            MenuButton(
-                text = stringResource(R.string.two_players),
-                color = Color(0xFF2196F3),
-                onClick = onTwoPlayers
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            MenuButton(
-                text = stringResource(R.string.multiplayer),
-                color = Color(0xFF9C27B0),
-                onClick = onMultiplayer
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            MenuButton(
-                text = stringResource(R.string.vs_cpu),
-                color = Color(0xFFE91E63),
-                onClick = onVsCpu
-            )
-            
-            Spacer(modifier = Modifier.height(140.dp))
+                Button(
+                    onClick = onStartGame,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4CAF50)
+                    )
+                ) {
+                    Text(stringResource(R.string.play), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel), color = Color.Gray)
+            }
         }
-    }
+    )
 }
 
 @Composable
-fun MenuButton(text: String, color: Color, onClick: () -> Unit) {
-    OutlinedButton(
+fun DifficultyOption(
+    title: String,
+    description: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp),
-        shape = MaterialTheme.shapes.medium,
-        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.6f)),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color.White,
-            containerColor = color.copy(alpha = 0.15f)
-        )
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) Color(0xFF00FFFF).copy(alpha = 0.1f) else Color(0xFF303050).copy(alpha = 0.5f)
+        ),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF00FFFF)) else null
     ) {
-        Text(
-            text = text,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = if (isSelected) Color(0xFF00FFFF) else Color.White
+            )
+            Text(
+                text = description,
+                fontSize = 14.sp,
+                color = Color.LightGray
+            )
+        }
     }
 }
 
@@ -395,94 +354,117 @@ fun MultiplayerDialog(
 }
 
 @Composable
-fun DifficultyDialog(
-    selectedDifficulty: Difficulty,
-    onDifficultyChanged: (Difficulty) -> Unit,
-    onStartGame: () -> Unit,
-    onDismiss: () -> Unit
+fun GameModeSelection(
+    onTwoPlayers: () -> Unit, 
+    onVsCpu: () -> Unit, 
+    onMultiplayer: () -> Unit,
+    onOpenBoardStyles: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A2E),
-        titleContentColor = Color.White,
-        textContentColor = Color.LightGray,
-        title = {
+    val scrollState = rememberScrollState()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F0F1A))
+    ) {
+        GalaxyBackground()
+        
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(140.dp))
+
             Text(
-                text = stringResource(R.string.choose_difficulty),
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
+                text = stringResource(R.string.game_title),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White
             )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                DifficultyOption(
-                    title = stringResource(R.string.easy_title),
-                    description = stringResource(R.string.easy_desc),
-                    isSelected = selectedDifficulty == Difficulty.EASY,
-                    onClick = { onDifficultyChanged(Difficulty.EASY) }
-                )
-                DifficultyOption(
-                    title = stringResource(R.string.medium_title),
-                    description = stringResource(R.string.medium_desc),
-                    isSelected = selectedDifficulty == Difficulty.MEDIUM,
-                    onClick = { onDifficultyChanged(Difficulty.MEDIUM) }
-                )
-                DifficultyOption(
-                    title = stringResource(R.string.hard_title),
-                    description = stringResource(R.string.hard_desc),
-                    isSelected = selectedDifficulty == Difficulty.HARD,
-                    onClick = { onDifficultyChanged(Difficulty.HARD) }
-                )
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                Button(
-                    onClick = onStartGame,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
+            Text(
+                text = stringResource(R.string.choose_game_mode),
+                fontSize = 18.sp,
+                color = Color.LightGray.copy(alpha = 0.8f)
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            MenuButton(
+                text = stringResource(R.string.two_players),
+                color = Color(0xFF2196F3),
+                onClick = onTwoPlayers
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            MenuButton(
+                text = stringResource(R.string.multiplayer),
+                color = Color(0xFF9C27B0),
+                onClick = onMultiplayer
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            MenuButton(
+                text = stringResource(R.string.vs_cpu),
+                color = Color(0xFFE91E63),
+                onClick = onVsCpu
+            )
+            
+            Spacer(modifier = Modifier.height(140.dp))
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(16.dp)
+        ) {
+            Surface(
+                onClick = onOpenBoardStyles,
+                shape = MaterialTheme.shapes.medium,
+                color = Color(0xFF303050).copy(alpha = 0.8f),
+                modifier = Modifier
+                    .size(48.dp)
+                    .align(Alignment.TopEnd)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Brush,
+                        contentDescription = "Board Styles",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
-                ) {
-                    Text(stringResource(R.string.play), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel), color = Color.Gray)
-            }
         }
-    )
+    }
 }
 
 @Composable
-fun DifficultyOption(
-    title: String,
-    description: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
+fun MenuButton(text: String, color: Color, onClick: () -> Unit) {
+    OutlinedButton(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFF00FFFF).copy(alpha = 0.1f) else Color(0xFF303050).copy(alpha = 0.5f)
-        ),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF00FFFF)) else null
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        shape = MaterialTheme.shapes.medium,
+        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.6f)),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = Color.White,
+            containerColor = color.copy(alpha = 0.15f)
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
-            Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = if (isSelected) Color(0xFF00FFFF) else Color.White
-            )
-            Text(
-                text = description,
-                fontSize = 14.sp,
-                color = Color.LightGray
-            )
-        }
+        Text(
+            text = text,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
