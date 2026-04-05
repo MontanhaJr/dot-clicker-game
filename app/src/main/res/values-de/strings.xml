@@ -38,4 +38,15 @@
     <string name="player_won">%s hat gewonnen! 🎉</string>
     <string name="player_label">Spieler %s</string>
     <string name="p_label">S%d</string>
+    <string name="premium_button">🚀 Werde Premium</string>
+    <string name="premium_title">⭐ Premium-Version</string>
+    <string name="premium_desc">Entferne alle Anzeigen dauerhaft und schalte ALLE Board-Stil-Personalisierungen frei!</string>
+    <string name="premium_subscribe">Jetzt abonnieren</string>
+    <string name="achievements_title">Errungenschaften</string>
+    <string name="achievements_available">Verfügbar</string>
+    <string name="achievements_completed">Abgeschlossen</string>
+    <string name="achievements_empty_available">Keine Errungenschaften mehr übrig! 🎉</string>
+    <string name="achievements_empty_completed">Spielen Sie weiter, um sie freizuschalten!</string>
+    <string name="achievement_founder_title">Gründer</string>
+    <string name="achievement_founder_desc">Spielen Sie im Jahr der Veröffentlichung (bis Ende 2026) 10 Spiele, um den Founder Gold-Stil freizuschalten.</string>
 </resources>

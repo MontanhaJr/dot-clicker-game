@@ -28,7 +28,8 @@ enum class BoardStyle {
     CHALKBOARD,
     CYBERPUNK_GLITCH,
     ANCIENT_SCROLL,
-    DEEP_SEA
+    DEEP_SEA,
+    FOUNDER_GOLD // Estilo especial para pioneiros
 }
 
 val PlayerColors = listOf(
@@ -51,10 +52,10 @@ fun getStylePlayerColor(style: BoardStyle, playerIndex: Int, isCpuGame: Boolean)
         BoardStyle.RETRO_ARCADE -> Color(0xFFFF00FF)
         BoardStyle.CHALKBOARD -> Color(0xFFFFD700)
         BoardStyle.CYBERPUNK_GLITCH -> Color(0xFFFF0055)
-        BoardStyle.ANCIENT_SCROLL -> Color(0xFF8B7310) // Amarelo Ouro Escurecido para contraste
+        BoardStyle.ANCIENT_SCROLL -> Color(0xFF8B7310)
         BoardStyle.DEEP_SEA -> Color(0xFFFFB703)
-        BoardStyle.GALAXY -> Color(0xFFE0E0E0)
-        BoardStyle.NEON_NIGHT -> Color(0xFFE0E0E0)
+        BoardStyle.FOUNDER_GOLD -> Color(0xFFE5E4E2) // Platina para CPU
+        else -> Color(0xFFE0E0E0)
     }
 
     if (isCpuGame && playerIndex == 2) return cpuColor
@@ -66,12 +67,19 @@ fun getStylePlayerColor(style: BoardStyle, playerIndex: Int, isCpuGame: Boolean)
         BoardStyle.CYBERPUNK_GLITCH -> if (playerIndex == 1) Color(0xFFBB00FF) else PlayerColors[(playerIndex - 1) % PlayerColors.size]
         BoardStyle.ANCIENT_SCROLL -> {
             when (playerIndex) {
-                1 -> Color(0xFF3E2723) // Marrom Escuro
-                2 -> Color(0xFF8B7310) // Amarelo Ouro Escurecido
+                1 -> Color(0xFF3E2723)
+                2 -> Color(0xFF8B7310)
                 else -> PlayerColors[(playerIndex - 1) % PlayerColors.size]
             }
         }
         BoardStyle.DEEP_SEA -> if (playerIndex == 1) Color(0xFFE9D8A6) else PlayerColors[(playerIndex - 1) % PlayerColors.size]
+        BoardStyle.FOUNDER_GOLD -> {
+            when (playerIndex) {
+                1 -> Color(0xFFFFD700) // Ouro
+                2 -> Color(0xFFE5E4E2) // Prata/Platina
+                else -> PlayerColors[(playerIndex - 1) % PlayerColors.size]
+            }
+        }
         else -> PlayerColors[(playerIndex - 1) % PlayerColors.size]
     }
 }
@@ -98,28 +106,13 @@ fun getStyleUiColors(style: BoardStyle): UiThemeColors {
             text = Color.White,
             isDark = true
         )
-        BoardStyle.DEEP_SEA -> UiThemeColors(
-            headerBg = Color(0xFF005F73).copy(alpha = 0.7f),
-            text = Color.White,
+        BoardStyle.FOUNDER_GOLD -> UiThemeColors(
+            headerBg = Color(0xFF1A1A1A).copy(alpha = 0.7f),
+            text = Color(0xFFFFD700),
             isDark = true
         )
-        BoardStyle.CYBERPUNK_GLITCH -> UiThemeColors(
-            headerBg = Color(0xFF1A0B2E).copy(alpha = 0.7f),
-            text = Color.White,
-            isDark = true
-        )
-        BoardStyle.RETRO_ARCADE -> UiThemeColors(
-            headerBg = Color(0xFF0D0D0D).copy(alpha = 0.7f),
-            text = Color.White,
-            isDark = true
-        )
-        BoardStyle.NEON_NIGHT -> UiThemeColors(
-            headerBg = Color(0xFF000814).copy(alpha = 0.7f),
-            text = Color.White,
-            isDark = true
-        )
-        BoardStyle.GALAXY -> UiThemeColors(
-            headerBg = Color(0xFF0A0A1A).copy(alpha = 0.7f),
+        else -> UiThemeColors(
+            headerBg = Color(0xFF1A1A2E).copy(alpha = 0.7f),
             text = Color.White,
             isDark = true
         )

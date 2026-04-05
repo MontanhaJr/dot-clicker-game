@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.models.BoardStyle
 import kotlin.math.sin
+import kotlin.random.Random
 
 @Composable
 fun BoardBackground(style: BoardStyle) {
@@ -31,6 +32,7 @@ fun BoardBackground(style: BoardStyle) {
         BoardStyle.CYBERPUNK_GLITCH -> CyberpunkGlitchBackground()
         BoardStyle.ANCIENT_SCROLL -> AncientScrollBackground()
         BoardStyle.DEEP_SEA -> DeepSeaBackground()
+        BoardStyle.FOUNDER_GOLD -> FounderGoldBackground()
     }
 }
 
@@ -198,17 +200,12 @@ fun AncientScrollBackground() {
             painter = painterResource(id = R.drawable.ancient_bg),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds
+            contentScale = ContentScale.Crop
         )
         
-        // Overlay sutil para garantir legibilidade e profundidade
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawRect(
-                brush = Brush.radialGradient(
-                    colors = listOf(Color.Transparent, Color(0xFF2B1B17).copy(alpha = 0.2f)),
-                    center = center,
-                    radius = size.maxDimension
-                )
+                color = Color(0xFF2B1B17).copy(alpha = 0.1f)
             )
         }
     }
@@ -241,6 +238,45 @@ fun DeepSeaBackground() {
                 radius = 2.dp.toPx(),
                 center = Offset((i * 50) % size.width, yPos)
             )
+        }
+    }
+}
+
+@Composable
+fun FounderGoldBackground() {
+    val infiniteTransition = rememberInfiniteTransition(label = "GoldTransition")
+    val shine by infiniteTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "GoldShine"
+    )
+
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF1A1A1A))) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            // Efeito de brilho metálico passando
+            drawRect(
+                brush = Brush.linearGradient(
+                    0.0f to Color(0xFFFFD700).copy(alpha = 0.1f),
+                    0.5f to Color(0xFFFFFACD).copy(alpha = 0.3f),
+                    1.0f to Color(0xFFFFD700).copy(alpha = 0.1f),
+                    start = Offset(size.width * (shine - 0.5f), 0f),
+                    end = Offset(size.width * (shine + 0.5f), size.height)
+                )
+            )
+            
+            // Partículas de "ouro"
+            val random = Random(123)
+            for (i in 0..50) {
+                drawCircle(
+                    color = Color(0xFFFFD700).copy(alpha = 0.2f),
+                    radius = random.nextFloat() * 3.dp.toPx(),
+                    center = Offset(random.nextFloat() * size.width, random.nextFloat() * size.height)
+                )
+            }
         }
     }
 }

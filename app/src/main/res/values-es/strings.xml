@@ -38,4 +38,15 @@
     <string name="player_won">¡%s ganó! 🎉</string>
     <string name="player_label">Jugador %s</string>
     <string name="p_label">P%d</string>
+    <string name="premium_button">🚀 Hazte Premium</string>
+    <string name="premium_title">⭐ Versión Premium</string>
+    <string name="premium_desc">¡Elimina todos los anuncios para siempre y desbloquea TODAS las personalizaciones de estilo de tablero!</string>
+    <string name="premium_subscribe">Suscribirse ahora</string>
+    <string name="achievements_title">Logros</string>
+    <string name="achievements_available">Disponibles</string>
+    <string name="achievements_completed">Completados</string>
+    <string name="achievements_empty_available">¡No quedan logros! 🎉</string>
+    <string name="achievements_empty_completed">¡Sigue jugando para desbloquear!</string>
+    <string name="achievement_founder_title">Fundador</string>
+    <string name="achievement_founder_desc">Juega 10 partidas durante el año de lanzamiento (hasta finales de 2026) para desbloquear el estilo Founder Gold.</string>
 </resources>

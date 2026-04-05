@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.*
@@ -22,10 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.BillingManager
+import com.montanhajr.pointgame.logic.StatisticsManager
 import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.models.Difficulty
 import com.montanhajr.pointgame.models.GameMode
 import com.montanhajr.pointgame.models.PlayerColors
+import com.montanhajr.pointgame.ui.components.AchievementDialog
 import com.montanhajr.pointgame.ui.components.GalaxyBackground
 import com.montanhajr.pointgame.ui.components.PremiumDialog
 
@@ -34,6 +37,7 @@ fun GameModeScreen() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("game_prefs", Context.MODE_PRIVATE) }
     val billingManager = remember { BillingManager(context) }
+    val statsManager = remember { StatisticsManager(context) }
     val isPremium by billingManager.isPremium.collectAsState()
     
     var gameMode by remember { mutableStateOf<GameMode?>(null) }
@@ -55,6 +59,7 @@ fun GameModeScreen() {
     var showPremiumDialog by remember { mutableStateOf(false) }
     var showBoardStyleScreen by remember { mutableStateOf(false) }
     var showStatsScreen by remember { mutableStateOf(false) }
+    var showAchievementDialog by remember { mutableStateOf(false) }
     var startGame by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -118,7 +123,8 @@ fun GameModeScreen() {
                             showMultiplayerDialog = true 
                         },
                         onOpenBoardStyles = { showBoardStyleScreen = true },
-                        onOpenStats = { showStatsScreen = true }
+                        onOpenStats = { showStatsScreen = true },
+                        onOpenAchievements = { showAchievementDialog = true }
                     )
                 }
             }
@@ -160,6 +166,165 @@ fun GameModeScreen() {
                 billingManager.launchPurchaseFlow(activity)
                 showPremiumDialog = false
             }
+        )
+    }
+
+    if (showAchievementDialog) {
+        AchievementDialog(
+            achievements = statsManager.getAchievements(),
+            onDismiss = { showAchievementDialog = false }
+        )
+    }
+}
+
+@Composable
+fun GameModeSelection(
+    onTwoPlayers: () -> Unit, 
+    onVsCpu: () -> Unit, 
+    onMultiplayer: () -> Unit,
+    onOpenBoardStyles: () -> Unit,
+    onOpenStats: () -> Unit,
+    onOpenAchievements: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F0F1A))
+    ) {
+        GalaxyBackground()
+        
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(140.dp))
+
+            Text(
+                text = stringResource(R.string.game_title),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = stringResource(R.string.choose_game_mode),
+                fontSize = 18.sp,
+                color = Color.LightGray.copy(alpha = 0.8f)
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            MenuButton(
+                text = stringResource(R.string.two_players),
+                color = Color(0xFF2196F3),
+                onClick = onTwoPlayers
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            MenuButton(
+                text = stringResource(R.string.multiplayer),
+                color = Color(0xFF9C27B0),
+                onClick = onMultiplayer
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            MenuButton(
+                text = stringResource(R.string.vs_cpu),
+                color = Color(0xFFE91E63),
+                onClick = onVsCpu
+            )
+            
+            Spacer(modifier = Modifier.height(140.dp))
+        }
+
+        // Botoes fixos no topo
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(16.dp)
+        ) {
+            // Stats button (Esquerda)
+            Surface(
+                onClick = onOpenStats,
+                shape = MaterialTheme.shapes.medium,
+                color = Color(0xFF303050).copy(alpha = 0.8f),
+                modifier = Modifier.size(48.dp).align(Alignment.TopStart)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Timeline,
+                        contentDescription = "Stats",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            // Central Achievement Button
+            Surface(
+                onClick = onOpenAchievements,
+                shape = MaterialTheme.shapes.medium,
+                color = Color(0xFFFFD700).copy(alpha = 0.8f),
+                modifier = Modifier.size(48.dp).align(Alignment.TopCenter)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = "Achievements",
+                        tint = Color(0xFF1A1A2E),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+
+            // Style button (Direita)
+            Surface(
+                onClick = onOpenBoardStyles,
+                shape = MaterialTheme.shapes.medium,
+                color = Color(0xFF303050).copy(alpha = 0.8f),
+                modifier = Modifier.size(48.dp).align(Alignment.TopEnd)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Brush,
+                        contentDescription = "Board Styles",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MenuButton(text: String, color: Color, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        shape = MaterialTheme.shapes.medium,
+        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.6f)),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = Color.White,
+            containerColor = color.copy(alpha = 0.15f)
+        )
+    ) {
+        Text(
+            text = text,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -361,139 +526,4 @@ fun MultiplayerDialog(
             }
         }
     )
-}
-
-@Composable
-fun GameModeSelection(
-    onTwoPlayers: () -> Unit, 
-    onVsCpu: () -> Unit, 
-    onMultiplayer: () -> Unit,
-    onOpenBoardStyles: () -> Unit,
-    onOpenStats: () -> Unit
-) {
-    val scrollState = rememberScrollState()
-    
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0F0F1A))
-    ) {
-        GalaxyBackground()
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(140.dp))
-
-            Text(
-                text = stringResource(R.string.game_title),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = stringResource(R.string.choose_game_mode),
-                fontSize = 18.sp,
-                color = Color.LightGray.copy(alpha = 0.8f)
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            MenuButton(
-                text = stringResource(R.string.two_players),
-                color = Color(0xFF2196F3),
-                onClick = onTwoPlayers
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            MenuButton(
-                text = stringResource(R.string.multiplayer),
-                color = Color(0xFF9C27B0),
-                onClick = onMultiplayer
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            MenuButton(
-                text = stringResource(R.string.vs_cpu),
-                color = Color(0xFFE91E63),
-                onClick = onVsCpu
-            )
-            
-            Spacer(modifier = Modifier.height(140.dp))
-        }
-
-        // Botoes fixos no topo
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Stats button (Esquerda)
-            Surface(
-                onClick = onOpenStats,
-                shape = MaterialTheme.shapes.medium,
-                color = Color(0xFF303050).copy(alpha = 0.8f),
-                modifier = Modifier.size(48.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Timeline,
-                        contentDescription = "Stats",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-
-            // Style button (Direita)
-            Surface(
-                onClick = onOpenBoardStyles,
-                shape = MaterialTheme.shapes.medium,
-                color = Color(0xFF303050).copy(alpha = 0.8f),
-                modifier = Modifier.size(48.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Brush,
-                        contentDescription = "Board Styles",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun MenuButton(text: String, color: Color, onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp),
-        shape = MaterialTheme.shapes.medium,
-        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.6f)),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color.White,
-            containerColor = color.copy(alpha = 0.15f)
-        )
-    ) {
-        Text(
-            text = text,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
 }

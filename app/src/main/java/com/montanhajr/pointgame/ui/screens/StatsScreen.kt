@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.logic.StatisticsManager
 import com.montanhajr.pointgame.models.BoardStyle
+import com.montanhajr.pointgame.ui.components.AchievementDialog
 import com.montanhajr.pointgame.ui.components.BoardBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,6 +29,7 @@ fun StatsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val statsManager = remember { StatisticsManager(context) }
     val stats = remember { statsManager.getStats() }
+    var showAchievementDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         BoardBackground(style = BoardStyle.GALAXY)
@@ -41,6 +44,11 @@ fun StatsScreen(onBack: () -> Unit) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                         }
                     },
+                    actions = {
+                        IconButton(onClick = { showAchievementDialog = true }) {
+                            Icon(Icons.Default.EmojiEvents, contentDescription = "Achievements", tint = Color(0xFFFFD700))
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black.copy(alpha = 0.5f))
                 )
             }
@@ -52,7 +60,7 @@ fun StatsScreen(onBack: () -> Unit) {
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally // Centraliza o conteúdo da coluna
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Total Triangles Card
                 StatsCard(
@@ -96,7 +104,7 @@ fun StatsScreen(onBack: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
-                    textAlign = TextAlign.Start // Mantém o título da grade alinhado à esquerda se preferir, ou Center
+                    textAlign = TextAlign.Start
                 )
                 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -109,6 +117,13 @@ fun StatsScreen(onBack: () -> Unit) {
             }
         }
     }
+
+    if (showAchievementDialog) {
+        AchievementDialog(
+            achievements = statsManager.getAchievements(),
+            onDismiss = { showAchievementDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -120,7 +135,7 @@ fun StatsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     ) {
         Column(
             modifier = Modifier.padding(20.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally // Centraliza o conteúdo dentro do Card
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = title, 

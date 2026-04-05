@@ -12,17 +12,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.BuildConfig
 import com.montanhajr.pointgame.R
+import com.montanhajr.pointgame.logic.StatisticsManager
 import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.ui.components.BoardBackground
 import com.montanhajr.pointgame.ui.components.PremiumDialog
@@ -36,11 +39,14 @@ fun BoardStyleScreen(
     onSubscribeClick: (Activity) -> Unit,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val statsManager = remember { StatisticsManager(context) }
+    val isFounderUnlocked = remember { statsManager.isFounderUnlocked() }
+    
     val isDebug = BuildConfig.DEBUG
     val canSelectAll = isDebug || isPremium
     var showPremiumDialog by remember { mutableStateOf(false) }
 
-    // Trata o botão voltar do sistema
     BackHandler {
         onBack()
     }
@@ -67,16 +73,24 @@ fun BoardStyleScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(BoardStyle.values()) { style ->
-                    val isLocked = !canSelectAll && style != BoardStyle.GALAXY
+                    val isLocked = when (style) {
+                        BoardStyle.GALAXY -> false
+                        BoardStyle.FOUNDER_GOLD -> !isFounderUnlocked && !isDebug
+                        else -> !canSelectAll
+                    }
+                    
                     val isSelected = style == currentStyle
 
                     StyleCard(
                         style = style,
                         isSelected = isSelected,
                         isLocked = isLocked,
+                        isAchievement = style == BoardStyle.FOUNDER_GOLD,
                         onClick = { 
                             if (isLocked) {
-                                showPremiumDialog = true
+                                if (style != BoardStyle.FOUNDER_GOLD) {
+                                    showPremiumDialog = true
+                                }
                             } else {
                                 onStyleSelected(style)
                             }
@@ -103,6 +117,7 @@ fun StyleCard(
     style: BoardStyle,
     isSelected: Boolean,
     isLocked: Boolean,
+    isAchievement: Boolean = false,
     onClick: () -> Unit
 ) {
     val styleName = when (style) {
@@ -115,6 +130,7 @@ fun StyleCard(
         BoardStyle.CYBERPUNK_GLITCH -> "Cyberpunk Glitch"
         BoardStyle.ANCIENT_SCROLL -> "Ancient Scroll"
         BoardStyle.DEEP_SEA -> "Deep Sea"
+        BoardStyle.FOUNDER_GOLD -> "Founder Gold"
     }
 
     Card(
@@ -127,25 +143,32 @@ fun StyleCard(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E))
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Preview do Background
             BoardBackground(style = style)
             
-            // Overlay para bloqueado ou selecionado
             if (isLocked) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.6f)),
+                        .background(Color.Black.copy(alpha = 0.7f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Lock, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
-                        Text("PREMIUM", color = Color(0xFFFFD700), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
+                        Icon(
+                            imageVector = if (isAchievement) Icons.Default.Star else Icons.Default.Lock, 
+                            contentDescription = null, 
+                            tint = Color.White, 
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Text(
+                            text = if (isAchievement) "PLAY 10 GAMES" else "PREMIUM", 
+                            color = Color(0xFFFFD700), 
+                            fontSize = 10.sp, 
+                            fontWeight = FontWeight.ExtraBold
+                        )
                     }
                 }
             }
 
-            // Nome do estilo no rodapé
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
