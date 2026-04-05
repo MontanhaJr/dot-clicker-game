@@ -37,7 +37,7 @@ fun GameModeScreen() {
     
     var gameMode by remember { mutableStateOf<GameMode?>(null) }
     var difficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
-    var numPlayers by remember { mutableIntStateOf(3) }
+    var numPlayers by remember { mutableIntStateOf(2) } // Alterado para 2 por padrão
     var playerNames by remember { mutableStateOf<List<String>?>(null) }
     
     // Carrega o estilo salvo ou o padrão (GALAXY)
@@ -104,11 +104,15 @@ fun GameModeScreen() {
                     GameModeSelection(
                         onTwoPlayers = { 
                             gameMode = GameMode.TWO_PLAYERS
+                            numPlayers = 2 // Garante 2 jogadores
                             playerNames = listOf("Player 1", "Player 2")
                             startGame = true
                          },
                         onVsCpu = { showDifficultyDialog = true },
-                        onMultiplayer = { showMultiplayerDialog = true },
+                        onMultiplayer = { 
+                            numPlayers = 3 // Reinicia para 3 antes de abrir o seletor multiplayer
+                            showMultiplayerDialog = true 
+                        },
                         onOpenBoardStyles = { showBoardStyleScreen = true }
                     )
                 }
@@ -122,6 +126,7 @@ fun GameModeScreen() {
             onDifficultyChanged = { difficulty = it },
             onStartGame = {
                 gameMode = GameMode.VS_CPU
+                numPlayers = 2 // Garante 2 jogadores (Humano vs CPU)
                 startGame = true
                 showDifficultyDialog = false
             },
