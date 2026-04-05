@@ -1,16 +1,21 @@
 package com.montanhajr.pointgame.ui.components
 
+import android.app.Activity
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.montanhajr.pointgame.R
 
 @Composable
-fun PremiumDialog(onDismiss: () -> Unit) {
+fun PremiumDialog(onDismiss: () -> Unit, onSubscribeClick: (Activity) -> Unit) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF1A1A2E),
@@ -27,7 +32,11 @@ fun PremiumDialog(onDismiss: () -> Unit) {
         },
         confirmButton = {
             Button(
-                onClick = { /* Implementar Billing SDK aqui */ },
+                onClick = { 
+                    if (activity != null) {
+                        onSubscribeClick(activity)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700))
             ) {

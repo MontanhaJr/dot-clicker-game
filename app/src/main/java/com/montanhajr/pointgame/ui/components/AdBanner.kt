@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,9 +24,19 @@ import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
 import com.montanhajr.pointgame.BuildConfig
 import com.montanhajr.pointgame.R
+import com.montanhajr.pointgame.logic.BillingManager
 
 @Composable
 fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
+    val context = LocalContext.current
+    val billingManager = remember { BillingManager(context) }
+    val isPremium by billingManager.isPremium.collectAsState()
+    
+    if (isPremium) {
+        // Se for premium, não renderiza nada (espaço vazio ou spacer de 0dp)
+        return
+    }
+
     var adFailed by remember { mutableStateOf(false) }
 
     Box(
@@ -36,7 +47,6 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
         contentAlignment = Alignment.Center
     ) {
         if (adFailed) {
-            // Fallback: Banner Premium com fundo semi-transparente para ver o background do tabuleiro
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -102,8 +112,6 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
                 }
             }
         } else {
-            // AdView por padrão tem fundo transparente ou branco dependendo do ad, 
-            // mas o container Box agora é transparente
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { context ->

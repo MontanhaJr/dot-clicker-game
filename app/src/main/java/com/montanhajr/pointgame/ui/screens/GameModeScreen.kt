@@ -1,5 +1,6 @@
 package com.montanhajr.pointgame.ui.screens
 
+import android.app.Activity
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
+import com.montanhajr.pointgame.logic.BillingManager
 import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.models.Difficulty
 import com.montanhajr.pointgame.models.GameMode
@@ -30,13 +32,14 @@ import com.montanhajr.pointgame.ui.components.PremiumDialog
 fun GameModeScreen() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("game_prefs", Context.MODE_PRIVATE) }
+    val billingManager = remember { BillingManager(context) }
+    val isPremium by billingManager.isPremium.collectAsState()
     
     var gameMode by remember { mutableStateOf<GameMode?>(null) }
     var difficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
     var numPlayers by remember { mutableIntStateOf(3) }
     var playerNames by remember { mutableStateOf<List<String>?>(null) }
     
-    // Carrega o estilo salvo ou o padrão (GALAXY)
     var selectedBoardStyle by remember { 
         val savedStyleName = prefs.getString("last_board_style", BoardStyle.GALAXY.name)
         mutableStateOf(try {
@@ -51,8 +54,6 @@ fun GameModeScreen() {
     var showPremiumDialog by remember { mutableStateOf(false) }
     var showBoardStyleScreen by remember { mutableStateOf(false) }
     var startGame by remember { mutableStateOf(false) }
-    
-    val isPremium by remember { mutableStateOf(false) }
 
     if (showBoardStyleScreen) {
         BoardStyleScreen(
@@ -60,7 +61,6 @@ fun GameModeScreen() {
             isPremium = isPremium,
             onStyleSelected = { style ->
                 selectedBoardStyle = style
-                // Salva a escolha do usuário permanentemente
                 prefs.edit().putString("last_board_style", style.name).apply()
             },
             onBack = { showBoardStyleScreen = false }
@@ -168,7 +168,13 @@ fun GameModeScreen() {
     }
 
     if (showPremiumDialog) {
-        PremiumDialog(onDismiss = { showPremiumDialog = false })
+        PremiumDialog(
+            onDismiss = { showPremiumDialog = false },
+            onSubscribeClick = { activity ->
+                billingManager.launchPurchaseFlow(activity)
+                showPremiumDialog = false
+            }
+        )
     }
 }
 
@@ -188,7 +194,22 @@ fun GameModeSelection(
     ) {
         GalaxyBackground()
         
-        // Conteúdo Principal
+        IconButton(
+            onClick = onOpenBoardStyles,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(16.dp)
+                .size(48.dp)
+                .background(Color(0xFF303050).copy(alpha = 0.8f), MaterialTheme.shapes.medium)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Brush,
+                contentDescription = "Board Styles",
+                tint = Color.White
+            )
+        }
+        
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -196,7 +217,6 @@ fun GameModeSelection(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Espaçador no topo para evitar que o conteúdo bata no botão de estilos e barra de status
             Spacer(modifier = Modifier.height(100.dp))
 
             Text(
@@ -239,23 +259,6 @@ fun GameModeSelection(
             )
             
             Spacer(modifier = Modifier.height(140.dp))
-        }
-
-        // Botão de Estilos movido para DEPOIS da Column no Box para garantir que fique no topo do Z-order (clicável)
-        IconButton(
-            onClick = onOpenBoardStyles,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(16.dp)
-                .size(48.dp)
-                .background(Color(0xFF303050).copy(alpha = 0.8f), MaterialTheme.shapes.medium)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Brush,
-                contentDescription = "Board Styles",
-                tint = Color.White
-            )
         }
     }
 }

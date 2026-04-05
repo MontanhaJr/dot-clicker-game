@@ -12,8 +12,8 @@ android {
         applicationId = "com.montanhajr.pointgame"
         minSdk = 24
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.2.1"
+        versionCode = 7
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -27,12 +27,8 @@ android {
         create("staging") {
             initWith(getByName("release"))
             matchingFallbacks += listOf("release")
-            
-            // Comportamento de Produção (DEBUG = false), mas com IDs de Teste
             buildConfigField("String", "AD_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
-            
-            // Usa chave de debug para facilitar a instalação no celular
             signingConfig = signingConfigs.getByName("debug")
         }
 
@@ -70,6 +66,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.google.play.services.ads)
+    implementation(libs.billing.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
