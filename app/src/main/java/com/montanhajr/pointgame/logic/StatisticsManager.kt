@@ -14,7 +14,7 @@ class StatisticsManager(private val context: Context) {
     companion object {
         // ID da conquista no Google Play Console. 
         // SUBSTITUA pelo ID real gerado no seu Console (ex: "CgkI...")
-        const val ACHIEVEMENT_FOUNDER_ID = "achievement_founder_gold"
+        const val ACHIEVEMENT_FOUNDER_ID = "CgkIw8SWm9MZEAIQAQ"
     }
 
     fun addTriangles(count: Int) {
