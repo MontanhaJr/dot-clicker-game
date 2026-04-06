@@ -1,12 +1,21 @@
 package com.montanhajr.pointgame.logic
 
+import android.app.Activity
 import android.content.Context
+import android.util.Log
+import com.google.android.gms.games.PlayGames
 import com.montanhajr.pointgame.models.Achievement
 import com.montanhajr.pointgame.models.Difficulty
 import java.util.Calendar
 
-class StatisticsManager(context: Context) {
+class StatisticsManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("game_stats", Context.MODE_PRIVATE)
+
+    companion object {
+        // ID da conquista no Google Play Console. 
+        // SUBSTITUA pelo ID real gerado no seu Console (ex: "CgkI...")
+        const val ACHIEVEMENT_FOUNDER_ID = "achievement_founder_gold"
+    }
 
     fun addTriangles(count: Int) {
         val current = prefs.getInt("total_triangles", 0)
@@ -29,19 +38,59 @@ class StatisticsManager(context: Context) {
         editor.putLong("total_matches", totalMatches)
         editor.putLong("total_time_ms", prefs.getLong("total_time_ms", 0) + timeMs)
         
-        // Lógica de Conquista: Founder
-        checkFounderAchievement(totalMatches, editor)
+        // Lógica de Conquista Local
+        checkLocalFounderAchievement(totalMatches, editor)
+        
+        // Sincroniza com a Nuvem (Play Games)
+        syncMatchToGooglePlay(totalMatches)
         
         editor.apply()
     }
 
-    private fun checkFounderAchievement(totalMatches: Long, editor: android.content.SharedPreferences.Editor) {
+    private fun checkLocalFounderAchievement(totalMatches: Long, editor: android.content.SharedPreferences.Editor) {
         if (prefs.getBoolean("achievement_founder", false)) return
 
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        // Se jogou 10 partidas durante o ano de lançamento (2025/2026 conforme o footer)
+        // Se jogou 10 partidas durante o ano de lançamento (2025/2026)
         if (currentYear <= 2026 && totalMatches >= 10) {
             editor.putBoolean("achievement_founder", true)
+        }
+    }
+
+    private fun syncMatchToGooglePlay(totalMatches: Long) {
+        val activity = context as? Activity ?: return
+        try {
+            // Usamos conquistas incrementais para o progresso de 10 partidas
+            PlayGames.getAchievementsClient(activity).setSteps(ACHIEVEMENT_FOUNDER_ID, totalMatches.toInt().coerceAtMost(10))
+        } catch (e: Exception) {
+            Log.e("StatsManager", "Play Games Sync failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Tenta carregar as conquistas da nuvem para o dispositivo local.
+     * Útil para quando o jogador reinstala o app.
+     */
+    fun syncFromCloud(onComplete: () -> Unit = {}) {
+        val activity = context as? Activity ?: return
+        PlayGames.getAchievementsClient(activity).load(true).addOnSuccessListener { annotatedData ->
+            val buffer = annotatedData.get()
+            if (buffer != null) {
+                try {
+                    val editor = prefs.edit()
+                    for (ach in buffer) {
+                        if (ach.achievementId == ACHIEVEMENT_FOUNDER_ID && ach.state == com.google.android.gms.games.achievement.Achievement.STATE_UNLOCKED) {
+                            editor.putBoolean("achievement_founder", true)
+                        }
+                    }
+                    editor.apply()
+                } finally {
+                    buffer.release()
+                }
+            }
+            onComplete()
+        }.addOnFailureListener {
+            onComplete()
         }
     }
 
@@ -60,7 +109,6 @@ class StatisticsManager(context: Context) {
                 requiredProgress = 10,
                 isCompleted = isFounderCompleted
             )
-            // Futuras conquistas podem ser adicionadas aqui
         )
     }
 
