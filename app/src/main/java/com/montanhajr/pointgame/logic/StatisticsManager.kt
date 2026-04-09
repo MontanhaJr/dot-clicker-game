@@ -12,9 +12,7 @@ class StatisticsManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("game_stats", Context.MODE_PRIVATE)
 
     companion object {
-        // ID da conquista no Google Play Console. 
-        // SUBSTITUA pelo ID real gerado no seu Console (ex: "CgkI...")
-        const val ACHIEVEMENT_FOUNDER_ID = "CgkIw8SWm9MZEAIQAQ"
+        const val ACHIEVEMENT_FOUNDER_ID = "achievement_founder_gold"
     }
 
     fun addTriangles(count: Int) {
@@ -38,20 +36,18 @@ class StatisticsManager(private val context: Context) {
         editor.putLong("total_matches", totalMatches)
         editor.putLong("total_time_ms", prefs.getLong("total_time_ms", 0) + timeMs)
         
-        // Lógica de Conquista Local
         checkLocalFounderAchievement(totalMatches, editor)
-        
-        // Sincroniza com a Nuvem (Play Games)
         syncMatchToGooglePlay(totalMatches)
+        
+        // Quando a partida acaba, marcamos que a próxima partida deve mostrar um ad
+        editor.putBoolean("ad_pending", true)
         
         editor.apply()
     }
 
     private fun checkLocalFounderAchievement(totalMatches: Long, editor: android.content.SharedPreferences.Editor) {
         if (prefs.getBoolean("achievement_founder", false)) return
-
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        // Se jogou 10 partidas durante o ano de lançamento (2025/2026)
         if (currentYear <= 2026 && totalMatches >= 10) {
             editor.putBoolean("achievement_founder", true)
         }
@@ -60,17 +56,12 @@ class StatisticsManager(private val context: Context) {
     private fun syncMatchToGooglePlay(totalMatches: Long) {
         val activity = context as? Activity ?: return
         try {
-            // Usamos conquistas incrementais para o progresso de 10 partidas
             PlayGames.getAchievementsClient(activity).setSteps(ACHIEVEMENT_FOUNDER_ID, totalMatches.toInt().coerceAtMost(10))
         } catch (e: Exception) {
             Log.e("StatsManager", "Play Games Sync failed: ${e.message}")
         }
     }
 
-    /**
-     * Tenta carregar as conquistas da nuvem para o dispositivo local.
-     * Útil para quando o jogador reinstala o app.
-     */
     fun syncFromCloud(onComplete: () -> Unit = {}) {
         val activity = context as? Activity ?: return
         PlayGames.getAchievementsClient(activity).load(true).addOnSuccessListener { annotatedData ->
@@ -93,6 +84,25 @@ class StatisticsManager(private val context: Context) {
             onComplete()
         }
     }
+
+    // Lógica de Anúncios Persistente
+    fun isAdPending(): Boolean = prefs.getBoolean("ad_pending", false)
+    
+    fun setAdPending(pending: Boolean) {
+        prefs.edit().putBoolean("ad_pending", pending).apply()
+    }
+
+    fun incrementRestartCount(): Int {
+        val count = prefs.getInt("restart_count", 0) + 1
+        prefs.edit().putInt("restart_count", count).apply()
+        return count
+    }
+
+    fun resetRestartCount() {
+        prefs.edit().putInt("restart_count", 0).apply()
+    }
+
+    fun getRestartCount(): Int = prefs.getInt("restart_count", 0)
 
     fun isFounderUnlocked(): Boolean = prefs.getBoolean("achievement_founder", false)
 

@@ -17,14 +17,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.*
 import com.montanhajr.pointgame.BuildConfig
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.BillingManager
+import kotlinx.coroutines.delay
 
 @Composable
 fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
@@ -33,11 +30,15 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
     val isPremium by billingManager.isPremium.collectAsState()
     
     if (isPremium) {
-        // Se for premium, não renderiza nada (espaço vazio ou spacer de 0dp)
         return
     }
 
-    var adFailed by remember { mutableStateOf(false) }
+    var adFailedCompletely by remember { mutableStateOf(false) }
+    var retryCount by remember { mutableIntStateOf(0) }
+    val maxRetries = 2 // Tenta a primeira + 2 re-tentativas
+    
+    // Trigger para forçar o recarregamento do AdView
+    var loadTrigger by remember { mutableIntStateOf(0) }
 
     Box(
         modifier = Modifier
@@ -46,7 +47,8 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
             .height(60.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (adFailed) {
+        if (adFailedCompletely) {
+            // Banner de fallback para Premium
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -112,21 +114,38 @@ fun AdBanner(onPremiumClick: (() -> Unit)? = null) {
                 }
             }
         } else {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = { context ->
-                    AdView(context).apply {
-                        setAdSize(AdSize.BANNER)
-                        adUnitId = BuildConfig.AD_UNIT_ID
-                        adListener = object : AdListener() {
-                            override fun onAdFailedToLoad(error: LoadAdError) {
-                                adFailed = true
+            // Tentativa de carregar AdMob
+            key(loadTrigger) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { ctx ->
+                        AdView(ctx).apply {
+                            setAdSize(AdSize.BANNER)
+                            adUnitId = BuildConfig.AD_UNIT_ID
+                            adListener = object : AdListener() {
+                                override fun onAdFailedToLoad(error: LoadAdError) {
+                                    if (retryCount < maxRetries) {
+                                        // Agenda uma nova tentativa em 20 segundos
+                                        postDelayed({
+                                            retryCount++
+                                            loadTrigger++
+                                        }, 20000)
+                                    } else {
+                                        // Falhou todas as vezes
+                                        adFailedCompletely = true
+                                    }
+                                }
+                                
+                                override fun onAdLoaded() {
+                                    // Reset caso carregue com sucesso
+                                    retryCount = 0
+                                }
                             }
+                            loadAd(AdRequest.Builder().build())
                         }
-                        loadAd(AdRequest.Builder().build())
                     }
-                }
-            )
+                )
+            }
         }
     }
 }
