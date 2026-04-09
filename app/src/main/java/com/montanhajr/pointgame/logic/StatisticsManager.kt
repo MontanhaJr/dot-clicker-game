@@ -12,7 +12,7 @@ class StatisticsManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("game_stats", Context.MODE_PRIVATE)
 
     companion object {
-        const val ACHIEVEMENT_FOUNDER_ID = "achievement_founder_gold"
+        const val ACHIEVEMENT_FOUNDER_ID = "CgkIw8SWm9MZEAIQAQ"
     }
 
     fun addTriangles(count: Int) {
@@ -20,7 +20,7 @@ class StatisticsManager(private val context: Context) {
         prefs.edit().putInt("total_triangles", current + count).apply()
     }
 
-    fun recordMatch(difficulty: Difficulty?, result: MatchResult, timeMs: Long) {
+    fun recordMatch(difficulty: Difficulty?, result: MatchResult, timeMs: Long): String? {
         val editor = prefs.edit()
         
         if (difficulty != null) {
@@ -36,21 +36,25 @@ class StatisticsManager(private val context: Context) {
         editor.putLong("total_matches", totalMatches)
         editor.putLong("total_time_ms", prefs.getLong("total_time_ms", 0) + timeMs)
         
-        checkLocalFounderAchievement(totalMatches, editor)
+        // Verifica se desbloqueou algo agora
+        val newlyUnlocked = checkLocalFounderAchievement(totalMatches, editor)
+        
         syncMatchToGooglePlay(totalMatches)
-        
-        // Quando a partida acaba, marcamos que a próxima partida deve mostrar um ad
         editor.putBoolean("ad_pending", true)
-        
         editor.apply()
+        
+        return newlyUnlocked
     }
 
-    private fun checkLocalFounderAchievement(totalMatches: Long, editor: android.content.SharedPreferences.Editor) {
-        if (prefs.getBoolean("achievement_founder", false)) return
+    private fun checkLocalFounderAchievement(totalMatches: Long, editor: android.content.SharedPreferences.Editor): String? {
+        if (prefs.getBoolean("achievement_founder", false)) return null
+
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         if (currentYear <= 2026 && totalMatches >= 10) {
             editor.putBoolean("achievement_founder", true)
+            return "Founder" // Nome da conquista para exibir na UI
         }
+        return null
     }
 
     private fun syncMatchToGooglePlay(totalMatches: Long) {
@@ -85,31 +89,18 @@ class StatisticsManager(private val context: Context) {
         }
     }
 
-    // Lógica de Anúncios Persistente
     fun isAdPending(): Boolean = prefs.getBoolean("ad_pending", false)
-    
-    fun setAdPending(pending: Boolean) {
-        prefs.edit().putBoolean("ad_pending", pending).apply()
-    }
-
+    fun setAdPending(pending: Boolean) { prefs.edit().putBoolean("ad_pending", pending).apply() }
     fun incrementRestartCount(): Int {
         val count = prefs.getInt("restart_count", 0) + 1
         prefs.edit().putInt("restart_count", count).apply()
         return count
     }
-
-    fun resetRestartCount() {
-        prefs.edit().putInt("restart_count", 0).apply()
-    }
-
-    fun getRestartCount(): Int = prefs.getInt("restart_count", 0)
-
+    fun resetRestartCount() { prefs.edit().putInt("restart_count", 0).apply() }
     fun isFounderUnlocked(): Boolean = prefs.getBoolean("achievement_founder", false)
 
     fun getAchievements(): List<Achievement> {
         val totalMatches = prefs.getLong("total_matches", 0).toInt()
-        val isFounderCompleted = isFounderUnlocked()
-        
         return listOf(
             Achievement(
                 id = "founder",
@@ -117,22 +108,21 @@ class StatisticsManager(private val context: Context) {
                 description = "Play 10 matches during the launch year (until end of 2026) to unlock the Founder Gold style.",
                 currentProgress = totalMatches.coerceAtMost(10),
                 requiredProgress = 10,
-                isCompleted = isFounderCompleted
+                isCompleted = isFounderUnlocked()
             )
         )
     }
 
     fun getStats(): GameStats {
+        val totalMatches = prefs.getLong("total_matches", 0)
         return GameStats(
             totalTriangles = prefs.getInt("total_triangles", 0),
-            totalMatches = prefs.getLong("total_matches", 0),
+            totalMatches = totalMatches,
             isFounderUnlocked = isFounderUnlocked(),
             easyStats = getDifficultyStats(Difficulty.EASY),
             mediumStats = getDifficultyStats(Difficulty.MEDIUM),
             hardStats = getDifficultyStats(Difficulty.HARD),
-            avgTimeMs = if (prefs.getLong("total_matches", 0) > 0) {
-                prefs.getLong("total_time_ms", 0) / prefs.getLong("total_matches", 0)
-            } else 0L
+            avgTimeMs = if (totalMatches > 0) prefs.getLong("total_time_ms", 0) / totalMatches else 0L
         )
     }
 
@@ -141,26 +131,10 @@ class StatisticsManager(private val context: Context) {
         val losses = prefs.getInt("losses_${difficulty.name.lowercase()}", 0)
         val draws = prefs.getInt("draws_${difficulty.name.lowercase()}", 0)
         val total = wins + losses + draws
-        val winRate = if (total > 0) (wins.toFloat() / total * 100).toInt() else 0
-        return DifficultyStats(wins, losses, draws, winRate)
+        return DifficultyStats(wins, losses, draws, if (total > 0) (wins.toFloat() / total * 100).toInt() else 0)
     }
 
     enum class MatchResult { WIN, LOSS, DRAW }
-
-    data class GameStats(
-        val totalTriangles: Int,
-        val totalMatches: Long,
-        val isFounderUnlocked: Boolean,
-        val easyStats: DifficultyStats,
-        val mediumStats: DifficultyStats,
-        val hardStats: DifficultyStats,
-        val avgTimeMs: Long
-    )
-
-    data class DifficultyStats(
-        val wins: Int,
-        val losses: Int,
-        val draws: Int,
-        val winRate: Int
-    )
+    data class GameStats(val totalTriangles: Int, val totalMatches: Long, val isFounderUnlocked: Boolean, val easyStats: DifficultyStats, val mediumStats: DifficultyStats, val hardStats: DifficultyStats, val avgTimeMs: Long)
+    data class DifficultyStats(val wins: Int, val losses: Int, val draws: Int, val winRate: Int)
 }

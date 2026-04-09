@@ -8,7 +8,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
@@ -59,6 +63,7 @@ fun DotsGameScreen(
     var showRestartDialog by remember { mutableStateOf(false) }
     var showPremiumDialog by remember { mutableStateOf(false) }
     var showFallbackInterstitial by remember { mutableStateOf(false) }
+    var unlockedAchievementName by remember { mutableStateOf<String?>(null) }
     var restartCountWithoutAd by remember { mutableStateOf(0) }
     var matchStartTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
     
@@ -99,13 +104,14 @@ fun DotsGameScreen(
         }
     }
 
+    // Record stats when game ends
     LaunchedEffect(gameState.gameOver) {
         if (gameState.gameOver) {
             val duration = System.currentTimeMillis() - matchStartTime
             val humanTriangles = if (gameMode == GameMode.VS_CPU) gameState.playerScores[0] else gameState.playerScores.sum()
             statsManager.addTriangles(humanTriangles)
             
-            if (gameMode == GameMode.VS_CPU) {
+            val newlyUnlocked = if (gameMode == GameMode.VS_CPU) {
                 val result = when {
                     gameState.playerScores[0] > gameState.playerScores[1] -> StatisticsManager.MatchResult.WIN
                     gameState.playerScores[0] < gameState.playerScores[1] -> StatisticsManager.MatchResult.LOSS
@@ -114,6 +120,12 @@ fun DotsGameScreen(
                 statsManager.recordMatch(difficulty, result, duration)
             } else {
                 statsManager.recordMatch(null, StatisticsManager.MatchResult.DRAW, duration)
+            }
+            
+            // Se uma conquista foi desbloqueada nesta partida, avisamos a UI
+            if (newlyUnlocked != null) {
+                delay(1000) // Pequeno delay após o fim do jogo
+                unlockedAchievementName = newlyUnlocked
             }
         }
     }
@@ -198,8 +210,6 @@ fun DotsGameScreen(
                 onBackToMenu = onBackToMenu
             )
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                // RESET TOTAL DO COMPONENTE: O key(gameState) garante que o tabuleiro
-                // seja recriado do zero a cada reinício, limpando qualquer offset ou seleção antiga.
                 key(gameState) {
                     GameBoard(
                         gameState = gameState,
@@ -224,6 +234,13 @@ fun DotsGameScreen(
     if (showRestartDialog) RestartConfirmDialog(onConfirm = { handleRestartLogic() }, onDismiss = { showRestartDialog = false })
     if (showPremiumDialog) PremiumDialog(onDismiss = { showPremiumDialog = false }, onSubscribeClick = { activity -> billingManager.launchPurchaseFlow(activity); showPremiumDialog = false })
     
+    if (unlockedAchievementName != null) {
+        AchievementUnlockedDialog(
+            achievementName = unlockedAchievementName!!,
+            onDismiss = { unlockedAchievementName = null }
+        )
+    }
+
     if (showFallbackInterstitial) {
         FallbackInterstitialDialog(
             onDismiss = { 
@@ -236,6 +253,51 @@ fun DotsGameScreen(
             }
         )
     }
+}
+
+@Composable
+fun AchievementUnlockedDialog(achievementName: String, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1A1A2E),
+        titleContentColor = Color.White,
+        textContentColor = Color.LightGray,
+        icon = {
+            Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(48.dp))
+        },
+        title = {
+            Text(
+                text = "Conquista Desbloqueada!", // Ajuste para stringResource se desejar
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = achievementName,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFFFFD700),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Você desbloqueou um novo estilo de tabuleiro exclusivo!",
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+            ) {
+                Text("Incrível!", fontWeight = FontWeight.Bold)
+            }
+        }
+    )
 }
 
 @Composable
