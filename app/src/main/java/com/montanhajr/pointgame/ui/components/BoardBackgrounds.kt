@@ -244,36 +244,47 @@ fun DeepSeaBackground() {
 
 @Composable
 fun FounderGoldBackground() {
-    val infiniteTransition = rememberInfiniteTransition(label = "GoldTransition")
-    val shine by infiniteTransition.animateFloat(
-        initialValue = -1f,
-        targetValue = 2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "GoldShine"
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.gold_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        
+        val infiniteTransition = rememberInfiniteTransition(label = "GoldTransition")
+        
+        // Aumentado o range (-2f a 2f) e diminuído o tempo (3000ms) para ser mais rápido e ir até o final
+        val shineProgress by infiniteTransition.animateFloat(
+            initialValue = -2f,
+            targetValue = 2f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(3000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "ShineProgress"
+        )
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF1A1A1A))) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            // Efeito de brilho metálico passando
+            // Reflexo de luz diagonal mais largo (color stops 0.3f a 0.7f)
             drawRect(
                 brush = Brush.linearGradient(
-                    0.0f to Color(0xFFFFD700).copy(alpha = 0.1f),
-                    0.5f to Color(0xFFFFFACD).copy(alpha = 0.3f),
-                    1.0f to Color(0xFFFFD700).copy(alpha = 0.1f),
-                    start = Offset(size.width * (shine - 0.5f), 0f),
-                    end = Offset(size.width * (shine + 0.5f), size.height)
+                    0.0f to Color.Transparent,
+                    0.3f to Color.White.copy(alpha = 0.02f),
+                    0.5f to Color.White.copy(alpha = 0.15f),
+                    0.7f to Color.White.copy(alpha = 0.02f),
+                    1.0f to Color.Transparent,
+                    start = Offset(size.width * shineProgress, 0f),
+                    end = Offset(size.width * (shineProgress + 1f), size.height)
                 )
             )
             
             // Partículas de "ouro"
             val random = Random(123)
-            for (i in 0..50) {
+            for (i in 0..30) {
                 drawCircle(
-                    color = Color(0xFFFFD700).copy(alpha = 0.2f),
-                    radius = random.nextFloat() * 3.dp.toPx(),
+                    color = Color(0xFFFFD700).copy(alpha = 0.15f),
+                    radius = random.nextFloat() * 2.dp.toPx(),
                     center = Offset(random.nextFloat() * size.width, random.nextFloat() * size.height)
                 )
             }

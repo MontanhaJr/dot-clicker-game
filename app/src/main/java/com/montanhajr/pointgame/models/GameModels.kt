@@ -29,7 +29,7 @@ enum class BoardStyle {
     CYBERPUNK_GLITCH,
     ANCIENT_SCROLL,
     DEEP_SEA,
-    FOUNDER_GOLD // Estilo especial para pioneiros
+    FOUNDER_GOLD
 }
 
 val PlayerColors = listOf(
@@ -54,7 +54,7 @@ fun getStylePlayerColor(style: BoardStyle, playerIndex: Int, isCpuGame: Boolean)
         BoardStyle.CYBERPUNK_GLITCH -> Color(0xFFFF0055)
         BoardStyle.ANCIENT_SCROLL -> Color(0xFF8B7310)
         BoardStyle.DEEP_SEA -> Color(0xFFFFB703)
-        BoardStyle.FOUNDER_GOLD -> Color(0xFFE5E4E2) // Platina para CPU
+        BoardStyle.FOUNDER_GOLD -> Color(0xFFD3D3D3) // Prata Claro para CPU
         else -> Color(0xFFE0E0E0)
     }
 
@@ -75,8 +75,8 @@ fun getStylePlayerColor(style: BoardStyle, playerIndex: Int, isCpuGame: Boolean)
         BoardStyle.DEEP_SEA -> if (playerIndex == 1) Color(0xFFE9D8A6) else PlayerColors[(playerIndex - 1) % PlayerColors.size]
         BoardStyle.FOUNDER_GOLD -> {
             when (playerIndex) {
-                1 -> Color(0xFFFFD700) // Ouro
-                2 -> Color(0xFFE5E4E2) // Prata/Platina
+                1 -> Color(0xFFB8860B) // Ouro Escuro
+                2 -> Color(0xFFD3D3D3) // Prata Claro (Contraste melhorado)
                 else -> PlayerColors[(playerIndex - 1) % PlayerColors.size]
             }
         }
