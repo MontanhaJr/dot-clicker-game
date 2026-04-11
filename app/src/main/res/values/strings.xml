@@ -1,6 +1,8 @@
 <resources>
+    <string name="game_services_project_id" translatable="false">881330594371</string>
     <string name="app_name">DotPop!</string>
     <string name="game_title">CONNECT THE DOTS!</string>
+
     <string name="choose_game_mode">Choose game mode</string>
     <string name="two_players">👥 2 Players</string>
     <string name="multiplayer">👨‍👩‍👧‍👦 Multiplayer (3-10)</string>

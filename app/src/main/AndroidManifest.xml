@@ -16,6 +16,11 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4612925515848375~4723655399"/>
 
+        <!-- Adicionado para identificar o Play Games Services -->
+        <meta-data
+            android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/game_services_project_id" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -23,7 +28,6 @@
             android:theme="@style/Theme.DotConnect">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
