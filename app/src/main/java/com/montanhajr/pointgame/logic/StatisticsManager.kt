@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.google.android.gms.games.PlayGames
+import com.montanhajr.pointgame.BuildConfig
 import com.montanhajr.pointgame.models.Achievement
 import com.montanhajr.pointgame.models.Difficulty
 import java.util.Calendar
@@ -12,7 +13,7 @@ class StatisticsManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("game_stats", Context.MODE_PRIVATE)
 
     companion object {
-        const val ACHIEVEMENT_FOUNDER_ID = "CgkIw8SWm9MZEAIQAQ"
+        const val ACHIEVEMENT_FOUNDER_ID = BuildConfig.ACHIEVEMENT_FOUNDER_ID
     }
 
     fun addTriangles(count: Int) {
@@ -36,9 +37,7 @@ class StatisticsManager(private val context: Context) {
         editor.putLong("total_matches", totalMatches)
         editor.putLong("total_time_ms", prefs.getLong("total_time_ms", 0) + timeMs)
         
-        // Verifica se desbloqueou algo agora
         val newlyUnlocked = checkLocalFounderAchievement(totalMatches, editor)
-        
         syncMatchToGooglePlay(totalMatches)
         editor.putBoolean("ad_pending", true)
         editor.apply()
@@ -48,11 +47,10 @@ class StatisticsManager(private val context: Context) {
 
     private fun checkLocalFounderAchievement(totalMatches: Long, editor: android.content.SharedPreferences.Editor): String? {
         if (prefs.getBoolean("achievement_founder", false)) return null
-
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         if (currentYear <= 2026 && totalMatches >= 10) {
             editor.putBoolean("achievement_founder", true)
-            return "Founder" // Nome da conquista para exibir na UI
+            return "Founder"
         }
         return null
     }

@@ -1,8 +1,23 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Lógica para ler o local.properties
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+val adMobAppId = localProperties.getProperty("admob.app.id") ?: ""
+val adMobBannerId = localProperties.getProperty("admob.banner.id") ?: ""
+val adMobInterstitialId = localProperties.getProperty("admob.interstitial.id") ?: ""
+val playGamesProjectId = localProperties.getProperty("playgames.project.id") ?: ""
+val achievementFounderId = localProperties.getProperty("achievement.founder.id") ?: ""
 
 android {
     namespace = "com.montanhajr.pointgame"
@@ -16,12 +31,18 @@ android {
         versionName = "1.4.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Passa o ID do Play Games para o Manifest
+        manifestPlaceholders["playGamesProjectId"] = playGamesProjectId
+        manifestPlaceholders["adMobAppId"] = adMobAppId
     }
 
     buildTypes {
         debug {
             buildConfigField("String", "AD_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+            buildConfigField("String", "ACHIEVEMENT_FOUNDER_ID", "\"CgkIw8SWm9MZEAIQAQ\"") // ID de teste ou real
+            manifestPlaceholders["adMobAppId"] = "ca-app-pub-3940256099942544~3347511713" // ID de Teste AdMob
         }
         
         create("staging") {
@@ -29,6 +50,7 @@ android {
             matchingFallbacks += listOf("release")
             buildConfigField("String", "AD_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+            buildConfigField("String", "ACHIEVEMENT_FOUNDER_ID", "\"$achievementFounderId\"")
             signingConfig = signingConfigs.getByName("debug")
         }
 
@@ -38,8 +60,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "AD_UNIT_ID", "\"ca-app-pub-4612925515848375/1492789146\"")
-            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-4612925515848375/7008139974\"")
+            buildConfigField("String", "AD_UNIT_ID", "\"$adMobBannerId\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"$adMobInterstitialId\"")
+            buildConfigField("String", "ACHIEVEMENT_FOUNDER_ID", "\"$achievementFounderId\"")
         }
     }
     compileOptions {
