@@ -1,5 +1,6 @@
 package com.montanhajr.pointgame.ui.components
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -14,11 +16,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.google.android.gms.games.PlayGames
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.models.Achievement
 
@@ -27,6 +33,8 @@ fun AchievementDialog(
     achievements: List<Achievement>,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(
         stringResource(R.string.achievements_available),
@@ -38,9 +46,9 @@ fun AchievementDialog(
         else achievements.filter { it.isCompleted }
     }
 
-    androidx.compose.ui.window.Dialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
             modifier = Modifier
@@ -120,12 +128,27 @@ fun AchievementDialog(
                 }
 
                 // Footer
-                Box(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Botão para abrir a UI oficial da Google Play
+                    TextButton(onClick = {
+                        activity?.let {
+                            PlayGames.getAchievementsClient(it).achievementsIntent
+                                .addOnSuccessListener { intent ->
+                                    it.startActivityForResult(intent, 9001)
+                                }
+                        }
+                    }) {
+                        Icon(Icons.Default.Public, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Play Games", color = Color(0xFF00FFFF))
+                    }
+
                     TextButton(onClick = onDismiss) {
                         Text(stringResource(R.string.close), color = Color.Gray)
                     }
