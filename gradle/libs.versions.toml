@@ -11,6 +11,8 @@ composeBom = "2024.09.00"
 playServicesAds = "25.0.0"
 billing = "7.1.1"
 playServicesGames = "20.1.2"
+ui = "1.10.6"
+foundation = "1.10.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,6 +33,8 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 google-play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
 google-play-services-games = { group = "com.google.android.gms", name = "play-services-games-v2", version.ref = "playServicesGames" }
 billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

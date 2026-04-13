@@ -4,8 +4,10 @@
     <string name="game_title">CONNECT THE DOTS!</string>
 
     <string name="choose_game_mode">Choose game mode</string>
+    <string name="journey_mode">🏆 Journey Mode</string>
     <string name="two_players">👥 2 Players</string>
     <string name="multiplayer">👨‍👩‍👧‍👦 Multiplayer (3-10)</string>
+    <string name="training_mode">🤖 Training Mode</string>
     <string name="vs_cpu">🤖 Vs CPU</string>
     <string name="menu">Menu</string>
     <string name="rules">Rules</string>
@@ -52,4 +54,6 @@
     <string name="achievements_empty_completed">Keep playing to unlock!</string>
     <string name="achievement_founder_title">Founder</string>
     <string name="achievement_founder_desc">Play 10 matches during the launch year (until end of 2026) to unlock the Founder Gold style.</string>
+    <string name="career_title">Journey</string>
+    <string name="level_label">Level %d</string>
 </resources>

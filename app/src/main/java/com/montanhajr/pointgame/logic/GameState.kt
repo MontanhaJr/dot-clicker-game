@@ -16,7 +16,8 @@ data class GameState(
     val gameOver: Boolean = false,
     val isCpuGame: Boolean = false,
     val difficulty: Difficulty = Difficulty.MEDIUM,
-    val boardStyle: BoardStyle = BoardStyle.GALAXY
+    val boardStyle: BoardStyle = BoardStyle.GALAXY,
+    val careerLevel: Int? = null
 ) {
     companion object {
         fun createNew(
@@ -24,17 +25,19 @@ data class GameState(
             difficulty: Difficulty = Difficulty.MEDIUM,
             numPlayers: Int = 2,
             playerNames: List<String>? = null,
-            boardStyle: BoardStyle = BoardStyle.GALAXY
+            boardStyle: BoardStyle = BoardStyle.GALAXY,
+            numPointsParam: Int? = null,
+            careerLevel: Int? = null
         ): GameState {
             val random = Random(System.currentTimeMillis())
-            val numPoints = 18 + random.nextInt(8)
+            val numPoints = numPointsParam ?: (18 + random.nextInt(8))
             val points = mutableListOf<DotPoint>()
             val minDistance = 110f
             val canvasWidth = 900f
             val canvasHeight = 1200f
             val padding = 150f
             var attempts = 0
-            val maxAttempts = 1000
+            val maxAttempts = 2000 // Aumentado para suportar mais pontos em níveis altos
 
             while (points.size < numPoints && attempts < maxAttempts) {
                 val x = padding + random.nextFloat() * (canvasWidth - 2 * padding)
@@ -55,7 +58,7 @@ data class GameState(
                 attempts++
             }
 
-            val names = playerNames ?: List(numPlayers) { i -> "P${i + 1}" }
+            val names = playerNames ?: List(numPlayers) { i -> if (isCpuGame && i == 1) "CPU" else "P${i + 1}" }
             val scores = List(numPlayers) { 0 }
 
             return GameState(
@@ -65,7 +68,8 @@ data class GameState(
                 numPlayers = numPlayers,
                 isCpuGame = isCpuGame,
                 difficulty = difficulty,
-                boardStyle = boardStyle
+                boardStyle = boardStyle,
+                careerLevel = careerLevel
             )
         }
     }
@@ -76,7 +80,6 @@ data class GameState(
         val newLine = Line(startId, endId, currentPlayer)
         val newLines = lines + newLine
         
-        // OTIMIZAÇÃO: Busca apenas triângulos que usam a nova linha
         val newlyFoundTriangles = findTrianglesForLine(newLine, newLines)
         val newTriangles = triangles + newlyFoundTriangles
         

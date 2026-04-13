@@ -91,6 +91,8 @@ dependencies {
     implementation(libs.google.play.services.ads)
     implementation(libs.google.play.services.games)
     implementation(libs.billing.ktx)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.compose.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

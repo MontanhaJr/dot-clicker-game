@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.BillingManager
+import com.montanhajr.pointgame.logic.CareerManager
 import com.montanhajr.pointgame.logic.StatisticsManager
 import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.models.Difficulty
@@ -38,12 +39,14 @@ fun GameModeScreen() {
     val prefs = remember { context.getSharedPreferences("game_prefs", Context.MODE_PRIVATE) }
     val billingManager = remember { BillingManager(context) }
     val statsManager = remember { StatisticsManager(context) }
+    val careerManager = remember { CareerManager(context) }
     val isPremium by billingManager.isPremium.collectAsState()
     
     var gameMode by remember { mutableStateOf<GameMode?>(null) }
     var difficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
     var numPlayers by remember { mutableIntStateOf(2) }
     var playerNames by remember { mutableStateOf<List<String>?>(null) }
+    var careerLevel by remember { mutableStateOf<Int?>(null) }
     
     var selectedBoardStyle by remember { 
         val savedStyleName = prefs.getString("last_board_style", BoardStyle.GALAXY.name)
@@ -60,12 +63,26 @@ fun GameModeScreen() {
     var showBoardStyleScreen by remember { mutableStateOf(false) }
     var showStatsScreen by remember { mutableStateOf(false) }
     var showAchievementDialog by remember { mutableStateOf(false) }
+    var showCareerScreen by remember { mutableStateOf(false) }
     var startGame by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
             showStatsScreen -> {
                 StatsScreen(onBack = { showStatsScreen = false })
+            }
+            showCareerScreen -> {
+                CareerScreen(
+                    onLevelSelected = { level ->
+                        careerLevel = level
+                        difficulty = careerManager.getDifficultyForLevel(level)
+                        gameMode = GameMode.VS_CPU
+                        numPlayers = 2
+                        startGame = true
+                        showCareerScreen = false
+                    },
+                    onBack = { showCareerScreen = false }
+                )
             }
             showBoardStyleScreen -> {
                 BoardStyleScreen(
@@ -88,10 +105,15 @@ fun GameModeScreen() {
                     numPlayers = numPlayers,
                     playerNames = playerNames,
                     boardStyle = selectedBoardStyle,
+                    careerLevel = careerLevel,
                     onBackToMenu = { 
+                        if (careerLevel != null) {
+                            showCareerScreen = true
+                        }
                         gameMode = null
                         startGame = false
                         playerNames = null
+                        careerLevel = null
                     }
                 )
             }
@@ -111,6 +133,7 @@ fun GameModeScreen() {
                     }
                 ) { _ ->
                     GameModeSelection(
+                        onCareerMode = { showCareerScreen = true },
                         onTwoPlayers = { 
                             gameMode = GameMode.TWO_PLAYERS
                             numPlayers = 2
@@ -179,6 +202,7 @@ fun GameModeScreen() {
 
 @Composable
 fun GameModeSelection(
+    onCareerMode: () -> Unit,
     onTwoPlayers: () -> Unit, 
     onVsCpu: () -> Unit, 
     onMultiplayer: () -> Unit,
@@ -222,6 +246,14 @@ fun GameModeSelection(
             Spacer(modifier = Modifier.height(48.dp))
 
             MenuButton(
+                text = stringResource(R.string.journey_mode),
+                color = Color(0xFFFFD700),
+                onClick = onCareerMode
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            MenuButton(
                 text = stringResource(R.string.two_players),
                 color = Color(0xFF2196F3),
                 onClick = onTwoPlayers
@@ -238,7 +270,7 @@ fun GameModeSelection(
             Spacer(modifier = Modifier.height(24.dp))
 
             MenuButton(
-                text = stringResource(R.string.vs_cpu),
+                text = stringResource(R.string.training_mode),
                 color = Color(0xFFE91E63),
                 onClick = onVsCpu
             )
