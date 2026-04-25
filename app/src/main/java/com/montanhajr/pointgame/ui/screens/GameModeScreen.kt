@@ -2,9 +2,13 @@ package com.montanhajr.pointgame.ui.screens
 
 import android.app.Activity
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brush
@@ -15,10 +19,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.R
@@ -28,10 +38,10 @@ import com.montanhajr.pointgame.logic.StatisticsManager
 import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.models.Difficulty
 import com.montanhajr.pointgame.models.GameMode
-import com.montanhajr.pointgame.models.PlayerColors
 import com.montanhajr.pointgame.ui.components.AchievementDialog
 import com.montanhajr.pointgame.ui.components.GalaxyBackground
 import com.montanhajr.pointgame.ui.components.PremiumDialog
+import com.montanhajr.pointgame.ui.theme.*
 
 @Composable
 fun GameModeScreen() {
@@ -124,10 +134,12 @@ fun GameModeScreen() {
                         if (!isPremium) {
                             ExtendedFloatingActionButton(
                                 onClick = { showPremiumDialog = true },
-                                containerColor = Color(0xFFFFD700),
-                                contentColor = Color(0xFF1A1A2E),
+                                containerColor = PopYellow,
+                                contentColor = PopDarkBlue,
                                 icon = { Icon(Icons.Default.Star, contentDescription = null) },
-                                text = { Text(stringResource(R.string.premium_button), fontWeight = FontWeight.Bold) }
+                                text = { Text(stringResource(R.string.premium_button), fontWeight = FontWeight.ExtraBold) },
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier.shadow(8.dp, RoundedCornerShape(20.dp))
                             )
                         }
                     }
@@ -215,9 +227,17 @@ fun GameModeSelection(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F0F1A))
     ) {
-        GalaxyBackground()
+        // App Background Image
+        Image(
+            painter = painterResource(id = R.drawable.app_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        
+        // Mantemos o GalaxyBackground como uma sobreposição leve se desejar, 
+        // ou podemos removê-lo. Vou mantê-lo com alpha baixo para dar um efeito Pop!
         
         Column(
             modifier = Modifier
@@ -226,138 +246,126 @@ fun GameModeSelection(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(140.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
-            Text(
-                text = stringResource(R.string.game_title),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+            // Logo Dot Pop! Oficial
+            Image(
+                painter = painterResource(id = R.drawable.dotpop_logo_no_bg),
+                contentDescription = "Dot Pop! Logo",
+                modifier = Modifier
+                    .size(240.dp)
+                    .padding(top = 48.dp),
+                contentScale = ContentScale.Fit
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            Text(
-                text = stringResource(R.string.choose_game_mode),
-                fontSize = 18.sp,
-                color = Color.LightGray.copy(alpha = 0.8f)
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            MenuButton(
+            PopMenuButton(
                 text = stringResource(R.string.journey_mode),
-                color = Color(0xFFFFD700),
+                mainColor = PopYellow,
+                secondaryColor = PopOrange,
                 onClick = onCareerMode
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            MenuButton(
+            PopMenuButton(
                 text = stringResource(R.string.two_players),
-                color = Color(0xFF2196F3),
+                mainColor = PopBlue,
+                secondaryColor = PopCyan,
                 onClick = onTwoPlayers
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            MenuButton(
+            PopMenuButton(
                 text = stringResource(R.string.multiplayer),
-                color = Color(0xFF9C27B0),
+                mainColor = PopGreen,
+                secondaryColor = Color(0xFF1B5E20),
                 onClick = onMultiplayer
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            MenuButton(
+            PopMenuButton(
                 text = stringResource(R.string.training_mode),
-                color = Color(0xFFE91E63),
+                mainColor = PopRed,
+                secondaryColor = Color(0xFF880E4F),
                 onClick = onVsCpu
             )
             
-            Spacer(modifier = Modifier.height(140.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
 
         // Botoes fixos no topo
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Stats button (Esquerda)
-            Surface(
-                onClick = onOpenStats,
-                shape = MaterialTheme.shapes.medium,
-                color = Color(0xFF303050).copy(alpha = 0.8f),
-                modifier = Modifier.size(48.dp).align(Alignment.TopStart)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Timeline,
-                        contentDescription = "Stats",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-
-            // Central Achievement Button
-            Surface(
-                onClick = onOpenAchievements,
-                shape = MaterialTheme.shapes.medium,
-                color = Color(0xFFFFD700).copy(alpha = 0.8f),
-                modifier = Modifier.size(48.dp).align(Alignment.TopCenter)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = "Achievements",
-                        tint = Color(0xFF1A1A2E),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
-
-            // Style button (Direita)
-            Surface(
-                onClick = onOpenBoardStyles,
-                shape = MaterialTheme.shapes.medium,
-                color = Color(0xFF303050).copy(alpha = 0.8f),
-                modifier = Modifier.size(48.dp).align(Alignment.TopEnd)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Brush,
-                        contentDescription = "Board Styles",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
+            PopIconButton(icon = Icons.Default.Timeline, color = PopCyan, onClick = onOpenStats)
+            PopIconButton(icon = Icons.Default.EmojiEvents, color = PopYellow, onClick = onOpenAchievements, size = 56.dp)
+            PopIconButton(icon = Icons.Default.Brush, color = PopCyan, onClick = onOpenBoardStyles)
         }
     }
 }
 
 @Composable
-fun MenuButton(text: String, color: Color, onClick: () -> Unit) {
-    OutlinedButton(
+fun PopMenuButton(text: String, mainColor: Color, secondaryColor: Color, onClick: () -> Unit) {
+    Button(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp),
-        shape = MaterialTheme.shapes.medium,
-        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.6f)),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color.White,
-            containerColor = color.copy(alpha = 0.15f)
-        )
+            .height(72.dp)
+            .shadow(8.dp, RoundedCornerShape(24.dp))
+            .border(3.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = mainColor),
+        contentPadding = PaddingValues(0.dp)
     ) {
-        Text(
-            text = text,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(mainColor, secondaryColor)
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text.uppercase(),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = PopWhite,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun PopIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, onClick: () -> Unit, size: androidx.compose.ui.unit.Dp = 48.dp) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = color,
+        modifier = Modifier
+            .size(size)
+            .shadow(6.dp, CircleShape)
+            .border(2.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = PopDarkBlue,
+                modifier = Modifier.size(size * 0.5f)
+            )
+        }
     }
 }
 
@@ -370,34 +378,38 @@ fun DifficultyDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A2E),
-        titleContentColor = Color.White,
+        containerColor = PopDeepBlue,
+        titleContentColor = PopWhite,
         textContentColor = Color.LightGray,
+        shape = RoundedCornerShape(32.dp),
+        tonalElevation = 12.dp,
         title = {
             Text(
                 text = stringResource(R.string.choose_difficulty),
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 DifficultyOption(
                     title = stringResource(R.string.easy_title),
-                    description = stringResource(R.string.easy_desc),
                     isSelected = selectedDifficulty == Difficulty.EASY,
+                    color = PopGreen,
                     onClick = { onDifficultyChanged(Difficulty.EASY) }
                 )
                 DifficultyOption(
                     title = stringResource(R.string.medium_title),
-                    description = stringResource(R.string.medium_desc),
                     isSelected = selectedDifficulty == Difficulty.MEDIUM,
+                    color = PopYellow,
                     onClick = { onDifficultyChanged(Difficulty.MEDIUM) }
                 )
                 DifficultyOption(
                     title = stringResource(R.string.hard_title),
-                    description = stringResource(R.string.hard_desc),
                     isSelected = selectedDifficulty == Difficulty.HARD,
+                    color = PopRed,
                     onClick = { onDifficultyChanged(Difficulty.HARD) }
                 )
 
@@ -405,50 +417,42 @@ fun DifficultyDialog(
 
                 Button(
                     onClick = onStartGame,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    )
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PopBlue),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(stringResource(R.string.play), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.play).uppercase(), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
                 }
             }
         },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel), color = Color.Gray)
-            }
-        }
+        confirmButton = {}
     )
 }
 
 @Composable
 fun DifficultyOption(
     title: String,
-    description: String,
     isSelected: Boolean,
+    color: Color,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFF00FFFF).copy(alpha = 0.1f) else Color(0xFF303050).copy(alpha = 0.5f)
-        ),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF00FFFF)) else null
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = if (isSelected) color else PopDarkBlue.copy(alpha = 0.5f),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(3.dp, PopWhite) else null
     ) {
-        Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+        Box(contentAlignment = Alignment.Center) {
             Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = if (isSelected) Color(0xFF00FFFF) else Color.White
-            )
-            Text(
-                text = description,
-                fontSize = 14.sp,
-                color = Color.LightGray
+                text = title.uppercase(),
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 18.sp,
+                color = if (isSelected) PopWhite else color
             )
         }
     }
@@ -461,101 +465,51 @@ fun MultiplayerDialog(
     onStartGame: (List<String>) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var step by remember { mutableStateOf(1) }
-    var names by remember(selectedCount) { 
-        mutableStateOf(List(selectedCount) { "" }) 
-    }
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A2E),
-        titleContentColor = Color.White,
+        containerColor = PopDeepBlue,
+        titleContentColor = PopWhite,
         textContentColor = Color.LightGray,
-        title = { 
+        shape = RoundedCornerShape(32.dp),
+        title = {
             Text(
-                text = if (step == 1) stringResource(R.string.how_many_players) else stringResource(R.string.player_names), 
-                fontWeight = FontWeight.Bold 
-            ) 
+                text = stringResource(R.string.multiplayer),
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 22.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
         },
         text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (step == 1) {
-                    Text(
-                        text = stringResource(R.string.num_players, selectedCount),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF00FFFF)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Slider(
-                        value = selectedCount.toFloat(),
-                        onValueChange = { onCountChanged(it.toInt()) },
-                        valueRange = 3f..10f,
-                        steps = 6,
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFF00FFFF),
-                            activeTrackColor = Color(0xFF00FFFF)
-                        )
-                    )
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .heightIn(max = 300.dp)
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        for (i in 0 until selectedCount) {
-                            val placeholderChar = ('A'.toInt() + i).toChar().toString()
-                            val placeholder = stringResource(R.string.player_label, placeholderChar)
-                            OutlinedTextField(
-                                value = names[i],
-                                onValueChange = { newName ->
-                                    val newList = names.toMutableList()
-                                    newList[i] = newName
-                                    names = newList
-                                },
-                                label = { Text(placeholder) },
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PlayerColors[i % PlayerColors.size],
-                                    unfocusedBorderColor = PlayerColors[i % PlayerColors.size].copy(alpha = 0.5f),
-                                    focusedLabelColor = PlayerColors[i % PlayerColors.size],
-                                    unfocusedLabelColor = Color.Gray,
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White
-                                ),
-                                modifier = Modifier.fillMaxWidth()
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(stringResource(R.string.how_many_players), fontWeight = FontWeight.Bold)
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    (2..4).forEach { count ->
+                        FilterChip(
+                            selected = selectedCount == count,
+                            onClick = { onCountChanged(count) },
+                            label = { Text(count.toString(), fontWeight = FontWeight.ExtraBold) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = PopBlue,
+                                selectedLabelColor = PopWhite
                             )
-                        }
+                        )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { onStartGame(List(selectedCount) { "Player ${it + 1}" }) },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PopGreen),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(stringResource(R.string.start_game).uppercase(), fontWeight = FontWeight.ExtraBold)
                 }
             }
         },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (step == 1) {
-                        step = 2
-                    } else {
-                        val finalNames = names.mapIndexed { i, name ->
-                            val placeholderChar = ('A'.toInt() + i).toChar().toString()
-                            name.ifBlank { "Player $placeholderChar" }
-                        }
-                        onStartGame(finalNames)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-            ) {
-                Text(if (step == 1) stringResource(R.string.confirm) else stringResource(R.string.start_game), fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = {
-                if (step == 2) step = 1 else onDismiss()
-            }) {
-                Text(if (step == 2) stringResource(R.string.back) else stringResource(R.string.cancel), color = Color.Gray)
-            }
-        }
+        confirmButton = {}
     )
 }
