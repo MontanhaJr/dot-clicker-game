@@ -1,27 +1,31 @@
 package com.montanhajr.pointgame.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.StatisticsManager
-import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.ui.components.AchievementDialog
-import com.montanhajr.pointgame.ui.components.BoardBackground
+import com.montanhajr.pointgame.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,24 +36,40 @@ fun StatsScreen(onBack: () -> Unit) {
     var showAchievementDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        BoardBackground(style = BoardStyle.GALAXY)
+        // App Background Image
+        Image(
+            painter = painterResource(id = R.drawable.app_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        
+        // Camada de contraste Pop!
+        Box(modifier = Modifier.fillMaxSize().background(PopDarkBlue.copy(alpha = 0.6f)))
         
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Statistics", color = Color.White, fontWeight = FontWeight.Bold) },
+                    title = { 
+                        Text(
+                            "ESTATÍSTICAS", 
+                            color = PopWhite, 
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 20.sp
+                        ) 
+                    },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PopWhite)
                         }
                     },
                     actions = {
                         IconButton(onClick = { showAchievementDialog = true }) {
-                            Icon(Icons.Default.EmojiEvents, contentDescription = "Achievements", tint = Color(0xFFFFD700))
+                            Icon(Icons.Default.EmojiEvents, contentDescription = "Achievements", tint = PopYellow)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black.copy(alpha = 0.5f))
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             }
         ) { padding ->
@@ -58,59 +78,64 @@ fun StatsScreen(onBack: () -> Unit) {
                     .padding(padding)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Total Triangles Card
-                StatsCard(
-                    title = "Career Performance",
+                // Card de Triângulos Totais (Destaque Principal)
+                PopStatsCard(
+                    title = "DESEMPENHO GLOBAL",
                     content = {
                         Text(
                             text = "${stats.totalTriangles}",
-                            fontSize = 48.sp,
+                            fontSize = 64.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF00FFFF),
-                            textAlign = TextAlign.Center
+                            color = PopCyan,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 64.sp
                         )
                         Text(
-                            text = "Triangles Formed", 
-                            color = Color.LightGray,
+                            text = "TRIÂNGULOS FORMADOS", 
+                            color = PopWhite.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
                             textAlign = TextAlign.Center
                         )
                     }
                 )
 
-                // Time Card
-                StatsCard(
-                    title = "Average Match Time",
+                // Row para tempo médio
+                PopStatsCard(
+                    title = "TEMPO MÉDIO POR PARTIDA",
                     content = {
                         val minutes = (stats.avgTimeMs / 1000) / 60
                         val seconds = (stats.avgTimeMs / 1000) % 60
                         Text(
                             text = String.format("%02d:%02d", minutes, seconds),
                             fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PopYellow,
                             textAlign = TextAlign.Center
                         )
                     }
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 // Difficulty Grid
                 Text(
-                    "VS CPU Win Rates",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                    "TAXA DE VITÓRIA (VS CPU)",
+                    color = PopWhite,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp,
+                    modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Start
                 )
                 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    WinRateCard(modifier = Modifier.weight(1f), label = "Easy", rate = stats.easyStats.winRate, color = Color(0xFF4CAF50))
-                    WinRateCard(modifier = Modifier.weight(1f), label = "Medium", rate = stats.mediumStats.winRate, color = Color(0xFFFF9800))
-                    WinRateCard(modifier = Modifier.weight(1f), label = "Hard", rate = stats.hardStats.winRate, color = Color(0xFFE91E63))
+                    PopWinRateCard(modifier = Modifier.weight(1f), label = "FÁCIL", rate = stats.easyStats.winRate, color = PopGreen)
+                    PopWinRateCard(modifier = Modifier.weight(1f), label = "MÉDIO", rate = stats.mediumStats.winRate, color = PopYellow)
+                    PopWinRateCard(modifier = Modifier.weight(1f), label = "DIFÍCIL", rate = stats.hardStats.winRate, color = PopRed)
                 }
                 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -127,21 +152,22 @@ fun StatsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-fun StatsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+fun PopStatsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.6f)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = PopDeepBlue.copy(alpha = 0.8f)),
+        border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Column(
-            modifier = Modifier.padding(20.dp).fillMaxWidth(),
+            modifier = Modifier.padding(24.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = title, 
-                color = Color.Gray, 
-                fontSize = 14.sp, 
-                fontWeight = FontWeight.Bold,
+                color = PopWhite.copy(alpha = 0.5f), 
+                fontSize = 12.sp, 
+                fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -151,25 +177,34 @@ fun StatsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun WinRateCard(modifier: Modifier, label: String, rate: Int, color: Color) {
+fun PopWinRateCard(modifier: Modifier, label: String, rate: Int, color: Color) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.6f))
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = PopDeepBlue.copy(alpha = 0.8f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Column(
             modifier = Modifier.padding(12.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(label, color = Color.White, fontSize = 12.sp, textAlign = TextAlign.Center)
-            Spacer(modifier = Modifier.height(8.dp))
-            CircularProgressIndicator(
-                progress = { rate.toFloat() / 100f },
-                color = color,
-                strokeWidth = 4.dp,
-                modifier = Modifier.size(40.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("$rate%", color = color, fontWeight = FontWeight.Bold, fontSize = 14.sp, textAlign = TextAlign.Center)
+            Text(label, color = PopWhite, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Spacer(modifier = Modifier.height(12.dp))
+            Box(contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { rate.toFloat() / 100f },
+                    color = color,
+                    trackColor = color.copy(alpha = 0.1f),
+                    strokeWidth = 6.dp,
+                    modifier = Modifier.size(50.dp)
+                )
+                Text(
+                    text = "$rate%", 
+                    color = color, 
+                    fontWeight = FontWeight.ExtraBold, 
+                    fontSize = 12.sp
+                )
+            }
         }
     }
 }

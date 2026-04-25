@@ -27,6 +27,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.google.android.gms.games.PlayGames
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.models.Achievement
+import com.montanhajr.pointgame.ui.theme.*
 
 @Composable
 fun AchievementDialog(
@@ -53,35 +54,38 @@ fun AchievementDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.8f),
-            shape = RoundedCornerShape(24.dp),
-            color = Color(0xFF1A1A2E)
+                .fillMaxHeight(0.85f),
+            shape = RoundedCornerShape(32.dp),
+            color = PopDeepBlue,
+            tonalElevation = 8.dp,
+            border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.1f))
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(top = 24.dp, bottom = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.achievements_title),
+                        text = stringResource(R.string.achievements_title).uppercase(),
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        fontWeight = FontWeight.ExtraBold,
+                        color = PopWhite
                     )
                 }
 
-                // Tabs
+                // Tabs Pop!
                 TabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = Color.Transparent,
-                    contentColor = Color(0xFF00FFFF),
+                    contentColor = PopCyan,
                     indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                            color = Color(0xFF00FFFF)
+                            color = PopCyan,
+                            height = 3.dp
                         )
                     },
                     divider = {}
@@ -92,9 +96,10 @@ fun AchievementDialog(
                             onClick = { selectedTab = index },
                             text = {
                                 Text(
-                                    text = title,
-                                    color = if (selectedTab == index) Color(0xFF00FFFF) else Color.Gray,
-                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                                    text = title.uppercase(),
+                                    color = if (selectedTab == index) PopCyan else PopWhite.copy(alpha = 0.5f),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 12.sp
                                 )
                             }
                         )
@@ -110,7 +115,8 @@ fun AchievementDialog(
                         Text(
                             text = if (selectedTab == 0) stringResource(R.string.achievements_empty_available) 
                                    else stringResource(R.string.achievements_empty_completed),
-                            color = Color.Gray
+                            color = PopWhite.copy(alpha = 0.4f),
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 } else {
@@ -122,12 +128,12 @@ fun AchievementDialog(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(filteredAchievements) { achievement ->
-                            AchievementItem(achievement)
+                            PopAchievementItem(achievement)
                         }
                     }
                 }
 
-                // Footer
+                // Footer Pop!
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -135,7 +141,6 @@ fun AchievementDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Botão para abrir a UI oficial da Google Play
                     TextButton(onClick = {
                         activity?.let {
                             PlayGames.getAchievementsClient(it).achievementsIntent
@@ -144,13 +149,17 @@ fun AchievementDialog(
                                 }
                         }
                     }) {
-                        Icon(Icons.Default.Public, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Public, contentDescription = null, modifier = Modifier.size(18.dp), tint = PopCyan)
                         Spacer(Modifier.width(8.dp))
-                        Text("Play Games", color = Color(0xFF00FFFF))
+                        Text("PLAY GAMES", color = PopCyan, fontWeight = FontWeight.ExtraBold)
                     }
 
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.close), color = Color.Gray)
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = PopBlue),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.close).uppercase(), fontWeight = FontWeight.ExtraBold)
                     }
                 }
             }
@@ -159,11 +168,12 @@ fun AchievementDialog(
 }
 
 @Composable
-fun AchievementItem(achievement: Achievement) {
+fun PopAchievementItem(achievement: Achievement) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.3f)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -171,19 +181,19 @@ fun AchievementItem(achievement: Achievement) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(52.dp)
                     .background(
-                        if (achievement.isCompleted) Color(0xFFFFD700).copy(alpha = 0.2f) 
-                        else Color.Gray.copy(alpha = 0.2f),
-                        RoundedCornerShape(12.dp)
+                        if (achievement.isCompleted) PopYellow.copy(alpha = 0.2f) 
+                        else PopWhite.copy(alpha = 0.1f),
+                        RoundedCornerShape(14.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (achievement.isCompleted) Icons.Default.CheckCircle else Icons.Default.Star,
                     contentDescription = null,
-                    tint = if (achievement.isCompleted) Color(0xFFFFD700) else Color.Gray,
-                    modifier = Modifier.size(28.dp)
+                    tint = if (achievement.isCompleted) PopYellow else PopWhite.copy(alpha = 0.3f),
+                    modifier = Modifier.size(30.dp)
                 )
             }
 
@@ -192,33 +202,36 @@ fun AchievementItem(achievement: Achievement) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = achievement.title,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = PopWhite,
                     fontSize = 16.sp
                 )
                 Text(
                     text = achievement.description,
-                    color = Color.LightGray,
+                    color = PopWhite.copy(alpha = 0.6f),
                     fontSize = 12.sp,
-                    lineHeight = 16.sp
+                    lineHeight = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 
                 if (!achievement.isCompleted) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     val progress = achievement.currentProgress.toFloat() / achievement.requiredProgress
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier.fillMaxWidth().height(6.dp),
-                        color = Color(0xFF00FFFF),
-                        trackColor = Color.White.copy(alpha = 0.1f),
-                        strokeCap = StrokeCap.Round
-                    )
+                    Box {
+                         LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxWidth().height(8.dp),
+                            color = PopCyan,
+                            trackColor = PopWhite.copy(alpha = 0.1f),
+                            strokeCap = StrokeCap.Round
+                        )
+                    }
                     Text(
                         text = "${achievement.currentProgress} / ${achievement.requiredProgress}",
-                        color = Color(0xFF00FFFF),
+                        color = PopCyan,
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.End).padding(top = 2.dp)
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
                     )
                 }
             }

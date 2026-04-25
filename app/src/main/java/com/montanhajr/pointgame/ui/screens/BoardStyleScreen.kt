@@ -2,12 +2,14 @@ package com.montanhajr.pointgame.ui.screens
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -17,10 +19,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.BuildConfig
@@ -29,6 +36,7 @@ import com.montanhajr.pointgame.logic.StatisticsManager
 import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.ui.components.BoardBackground
 import com.montanhajr.pointgame.ui.components.PremiumDialog
+import com.montanhajr.pointgame.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,51 +59,71 @@ fun BoardStyleScreen(
         onBack()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Board Styles", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A1A2E))
-            )
-        },
-        containerColor = Color(0xFF0F0F1A)
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(BoardStyle.values()) { style ->
-                    val isLocked = when (style) {
-                        BoardStyle.GALAXY -> false
-                        BoardStyle.FOUNDER_GOLD -> !isFounderUnlocked && !isDebug
-                        else -> !canSelectAll
-                    }
-                    
-                    val isSelected = style == currentStyle
+    Box(modifier = Modifier.fillMaxSize()) {
+        // App Background oficial
+        Image(
+            painter = painterResource(id = R.drawable.app_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        
+        // Camada Pop!
+        Box(modifier = Modifier.fillMaxSize().background(PopDarkBlue.copy(alpha = 0.6f)))
 
-                    StyleCard(
-                        style = style,
-                        isSelected = isSelected,
-                        isLocked = isLocked,
-                        isAchievement = style == BoardStyle.FOUNDER_GOLD,
-                        onClick = { 
-                            if (isLocked) {
-                                if (style != BoardStyle.FOUNDER_GOLD) {
-                                    showPremiumDialog = true
-                                }
-                            } else {
-                                onStyleSelected(style)
-                            }
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = { 
+                        Text(
+                            "ESTILOS DE TABULEIRO", 
+                            color = PopWhite, 
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 20.sp
+                        ) 
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PopWhite)
                         }
-                    )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                )
+            }
+        ) { padding ->
+            Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    items(BoardStyle.entries.toTypedArray()) { style ->
+                        val isLocked = when (style) {
+                            BoardStyle.GALAXY -> false
+                            BoardStyle.FOUNDER_GOLD -> !isFounderUnlocked && !isDebug
+                            else -> !canSelectAll
+                        }
+                        
+                        val isSelected = style == currentStyle
+
+                        PopStyleCard(
+                            style = style,
+                            isSelected = isSelected,
+                            isLocked = isLocked,
+                            isAchievement = style == BoardStyle.FOUNDER_GOLD,
+                            onClick = { 
+                                if (isLocked) {
+                                    if (style != BoardStyle.FOUNDER_GOLD) {
+                                        showPremiumDialog = true
+                                    }
+                                } else {
+                                    onStyleSelected(style)
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -113,7 +141,7 @@ fun BoardStyleScreen(
 }
 
 @Composable
-fun StyleCard(
+fun PopStyleCard(
     style: BoardStyle,
     isSelected: Boolean,
     isLocked: Boolean,
@@ -121,79 +149,90 @@ fun StyleCard(
     onClick: () -> Unit
 ) {
     val styleName = when (style) {
-        BoardStyle.GALAXY -> "Galaxy (Default)"
-        BoardStyle.NEON_NIGHT -> "Neon Night"
-        BoardStyle.MINIMALIST_WHITE -> "Minimalist White"
-        BoardStyle.RETRO_ARCADE -> "Retro Arcade"
-        BoardStyle.PAPER_NOTEBOOK -> "Notebook"
-        BoardStyle.CHALKBOARD -> "Chalkboard"
-        BoardStyle.CYBERPUNK_GLITCH -> "Cyberpunk Glitch"
-        BoardStyle.ANCIENT_SCROLL -> "Ancient Scroll"
-        BoardStyle.DEEP_SEA -> "Deep Sea"
-        BoardStyle.FOUNDER_GOLD -> "Founder Gold"
+        BoardStyle.GALAXY -> "GALÁXIA"
+        BoardStyle.NEON_NIGHT -> "NEON NIGHT"
+        BoardStyle.MINIMALIST_WHITE -> "MINIMALISTA"
+        BoardStyle.RETRO_ARCADE -> "RETRO ARCADE"
+        BoardStyle.PAPER_NOTEBOOK -> "CADERNO"
+        BoardStyle.CHALKBOARD -> "LOUSA"
+        BoardStyle.CYBERPUNK_GLITCH -> "CYBERPUNK"
+        BoardStyle.ANCIENT_SCROLL -> "PERGAMINHO"
+        BoardStyle.DEEP_SEA -> "OCEANO"
+        BoardStyle.FOUNDER_GOLD -> "OURO FUNDADOR"
     }
 
     Card(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp),
-        shape = RoundedCornerShape(12.dp),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(3.dp, Color(0xFFFFD700)) else null,
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E))
+            .height(200.dp)
+            .shadow(if (isSelected) 12.dp else 4.dp, RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(4.dp, PopYellow) else null,
+        colors = CardDefaults.cardColors(containerColor = PopDeepBlue)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
+            // Preview do tabuleiro original
             BoardBackground(style = style)
             
             if (isLocked) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.7f)),
+                        .background(Color.Black.copy(alpha = 0.75f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             imageVector = if (isAchievement) Icons.Default.Star else Icons.Default.Lock, 
                             contentDescription = null, 
-                            tint = Color.White, 
-                            modifier = Modifier.size(32.dp)
+                            tint = if (isAchievement) PopYellow else PopWhite, 
+                            modifier = Modifier.size(36.dp)
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (isAchievement) "PLAY 10 GAMES" else "PREMIUM", 
-                            color = Color(0xFFFFD700), 
-                            fontSize = 10.sp, 
+                            color = if (isAchievement) PopYellow else PopCyan, 
+                            fontSize = 11.sp, 
                             fontWeight = FontWeight.ExtraBold
                         )
                     }
                 }
             }
 
+            // Banner Inferior do Nome
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .background(Color.Black.copy(alpha = 0.7f))
-                    .padding(8.dp)
+                    .background(PopDeepBlue.copy(alpha = 0.85f))
+                    .padding(vertical = 10.dp)
             ) {
                 Text(
                     text = styleName,
-                    color = Color.White,
+                    color = PopWhite,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.align(Alignment.Center),
+                    textAlign = TextAlign.Center
                 )
             }
             
+            // Selo de Ativo
             if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .padding(8.dp)
+                        .padding(12.dp)
                         .align(Alignment.TopEnd)
-                        .background(Color(0xFFFFD700), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .background(PopYellow, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Text("ACTIVE", color = Color(0xFF1A1A2E), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "ATIVO", 
+                        color = PopDarkBlue, 
+                        fontSize = 10.sp, 
+                        fontWeight = FontWeight.ExtraBold
+                    )
                 }
             }
         }

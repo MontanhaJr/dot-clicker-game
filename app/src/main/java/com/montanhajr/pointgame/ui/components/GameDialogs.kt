@@ -25,6 +25,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.GameState
+import com.montanhajr.pointgame.ui.theme.*
 
 @Composable
 fun GameDialogManager(
@@ -63,7 +64,6 @@ fun GameDialogManager(
         )
     }
 
-    // Se o jogo acabou e não foi uma vitória na carreira, mostramos Derrota ou GameOver genérico
     if (gameState.gameOver && !showLevelComplete) {
         val isCpuWin = gameState.isCpuGame && gameState.getWinnerIndex() == 1
         
@@ -94,10 +94,11 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
     ) {
         Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = Color(0xFF1A1A2E),
-            tonalElevation = 8.dp,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            shape = RoundedCornerShape(32.dp),
+            color = PopDeepBlue,
+            tonalElevation = 12.dp,
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            border = BorderStroke(2.dp, Color.White.copy(alpha = 0.1f))
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -106,17 +107,17 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
                 Icon(
                     imageVector = Icons.Default.SentimentVeryDissatisfied,
                     contentDescription = null,
-                    tint = Color(0xFFE91E63),
+                    tint = PopRed,
                     modifier = Modifier.size(64.dp)
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Não foi dessa vez!",
+                    text = "NÃO FOI DESSA VEZ!",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
+                    color = PopWhite,
+                    fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center
                 )
                 
@@ -134,7 +135,7 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
                 Button(
                     onClick = onRetry,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                    colors = ButtonDefaults.buttonColors(containerColor = PopRed),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Text("TENTAR NOVAMENTE", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
@@ -145,12 +146,12 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
                 OutlinedButton(
                     onClick = onBackToMap,
                     modifier = Modifier.fillMaxWidth().height(50.dp),
-                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
+                    border = BorderStroke(2.dp, PopWhite.copy(alpha = 0.2f)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Icon(Icons.Default.Map, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Map, contentDescription = null, tint = PopWhite, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("VOLTAR PARA O MAPA", color = Color.White, fontSize = 14.sp)
+                    Text("VOLTAR PARA O MAPA", color = PopWhite, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -161,16 +162,17 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
 fun GameOverDialog(message: String, onRestart: () -> Unit, onBackToMenu: () -> Unit) {
     AlertDialog(
         onDismissRequest = { },
-        containerColor = Color(0xFF1A1A2E),
-        titleContentColor = Color.White,
+        containerColor = PopDeepBlue,
+        titleContentColor = PopWhite,
         textContentColor = Color.LightGray,
-        title = { Text(text = "Fim de Jogo", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+        shape = RoundedCornerShape(32.dp),
+        title = { Text(text = "FIM DE JOGO", fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), color = PopWhite) },
         text = { 
             Text(
-                text = message,
+                text = message.uppercase(),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color.White,
+                color = PopCyan,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -178,10 +180,11 @@ fun GameOverDialog(message: String, onRestart: () -> Unit, onBackToMenu: () -> U
         confirmButton = {
             Button(
                 onClick = onRestart,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = PopBlue),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text("RECOMECAR", fontWeight = FontWeight.Bold)
+                Text("RECOMECAR", fontWeight = FontWeight.ExtraBold)
             }
         },
         dismissButton = {
@@ -189,7 +192,7 @@ fun GameOverDialog(message: String, onRestart: () -> Unit, onBackToMenu: () -> U
                 onClick = onBackToMenu,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("VOLTAR AO MENU", color = Color.Gray)
+                Text("VOLTAR AO MENU", color = Color.Gray, fontWeight = FontWeight.Bold)
             }
         }
     )
@@ -202,10 +205,11 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
     ) {
         Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = Color(0xFF1A1A2E),
-            tonalElevation = 8.dp,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            shape = RoundedCornerShape(32.dp),
+            color = PopDeepBlue,
+            tonalElevation = 12.dp,
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            border = BorderStroke(2.dp, PopYellow.copy(alpha = 0.3f))
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -214,17 +218,17 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
                 Icon(
                     imageVector = Icons.Default.EmojiEvents,
                     contentDescription = null,
-                    tint = Color(0xFFFFD700),
-                    modifier = Modifier.size(64.dp)
+                    tint = PopYellow,
+                    modifier = Modifier.size(72.dp)
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Nível $level Concluído!",
+                    text = "NÍVEL $level CONCLUÍDO!",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
+                    color = PopWhite,
+                    fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center
                 )
                 
@@ -242,7 +246,7 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
                 Button(
                     onClick = onNextLevel,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    colors = ButtonDefaults.buttonColors(containerColor = PopGreen),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Icon(Icons.Default.NavigateNext, contentDescription = null)
@@ -255,12 +259,12 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
                 OutlinedButton(
                     onClick = onBackToMap,
                     modifier = Modifier.fillMaxWidth().height(50.dp),
-                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
+                    border = BorderStroke(2.dp, PopWhite.copy(alpha = 0.2f)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Icon(Icons.Default.Map, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Map, contentDescription = null, tint = PopWhite, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("VOLTAR PARA O MAPA", color = Color.White, fontSize = 14.sp)
+                    Text("VOLTAR PARA O MAPA", color = PopWhite, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -271,13 +275,22 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
 fun RestartConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A2E),
-        titleContentColor = Color.White,
+        containerColor = PopDeepBlue,
+        titleContentColor = PopWhite,
         textContentColor = Color.LightGray,
-        title = { Text(text = stringResource(R.string.restart_title), fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+        shape = RoundedCornerShape(28.dp),
+        title = { Text(text = stringResource(R.string.restart_title), fontWeight = FontWeight.ExtraBold, fontSize = 20.sp) },
         text = { Text(text = stringResource(R.string.restart_desc), fontSize = 16.sp) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.restart_confirm), color = Color(0xFFE91E63), fontWeight = FontWeight.Bold) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Color.Gray) } }
+        confirmButton = { 
+            TextButton(onClick = onConfirm) { 
+                Text(stringResource(R.string.restart_confirm).uppercase(), color = PopRed, fontWeight = FontWeight.ExtraBold) 
+            } 
+        },
+        dismissButton = { 
+            TextButton(onClick = onDismiss) { 
+                Text(stringResource(R.string.cancel).uppercase(), color = PopWhite.copy(alpha = 0.6f), fontWeight = FontWeight.Bold) 
+            } 
+        }
     )
 }
 
@@ -285,42 +298,46 @@ fun RestartConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 fun AchievementUnlockedDialog(achievementName: String, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A2E),
-        titleContentColor = Color.White,
+        containerColor = PopDeepBlue,
+        titleContentColor = PopWhite,
         textContentColor = Color.LightGray,
+        shape = RoundedCornerShape(32.dp),
         icon = {
-            Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(48.dp))
+            Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = PopYellow, modifier = Modifier.size(56.dp))
         },
         title = {
             Text(
-                text = "Conquista Desbloqueada!",
-                fontWeight = FontWeight.Bold,
+                text = "CONQUISTA!",
+                fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center
             )
         },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = achievementName,
-                    fontSize = 20.sp,
+                    text = achievementName.uppercase(),
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFFFFD700),
+                    color = PopYellow,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Você desbloqueou um novo estilo de tabuleiro exclusivo!",
                     fontSize = 14.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = PopWhite.copy(alpha = 0.8f)
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                colors = ButtonDefaults.buttonColors(containerColor = PopGreen),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Incrível!", fontWeight = FontWeight.Bold)
+                Text("INCRÍVEL!", fontWeight = FontWeight.ExtraBold)
             }
         }
     )
@@ -330,27 +347,36 @@ fun AchievementUnlockedDialog(achievementName: String, onDismiss: () -> Unit) {
 fun RulesDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A2E),
-        titleContentColor = Color.White,
+        containerColor = PopDeepBlue,
+        titleContentColor = PopWhite,
         textContentColor = Color.LightGray,
-        title = { Text(text = stringResource(R.string.rules), fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+        shape = RoundedCornerShape(28.dp),
+        title = { Text(text = stringResource(R.string.rules).uppercase(), fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = PopCyan) },
         text = { 
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) { 
-                RuleItem(title = stringResource(R.string.objective_title), description = stringResource(R.string.objective_desc))
-                Spacer(modifier = Modifier.height(8.dp))
-                RuleItem(title = stringResource(R.string.turns_title), description = stringResource(R.string.turns_desc))
-                Spacer(modifier = Modifier.height(8.dp))
-                RuleItem(title = stringResource(R.string.prohibited_title), description = stringResource(R.string.prohibited_desc)) 
+                PopRuleItem(title = stringResource(R.string.objective_title), description = stringResource(R.string.objective_desc))
+                Spacer(modifier = Modifier.height(12.dp))
+                PopRuleItem(title = stringResource(R.string.turns_title), description = stringResource(R.string.turns_desc))
+                Spacer(modifier = Modifier.height(12.dp))
+                PopRuleItem(title = stringResource(R.string.prohibited_title), description = stringResource(R.string.prohibited_desc)) 
             } 
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.understood), color = Color(0xFF00FFFF)) } }
+        confirmButton = { 
+            Button(
+                onClick = onDismiss, 
+                colors = ButtonDefaults.buttonColors(containerColor = PopBlue),
+                shape = RoundedCornerShape(12.dp)
+            ) { 
+                Text(stringResource(R.string.understood).uppercase(), fontWeight = FontWeight.ExtraBold) 
+            } 
+        }
     )
 }
 
 @Composable
-private fun RuleItem(title: String, description: String) {
+private fun PopRuleItem(title: String, description: String) {
     Column {
-        Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF00FFFF))
-        Text(text = description, fontSize = 13.sp, color = Color.LightGray)
+        Text(text = title.uppercase(), fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = PopYellow)
+        Text(text = description, fontSize = 13.sp, color = PopWhite.copy(alpha = 0.7f))
     }
 }
