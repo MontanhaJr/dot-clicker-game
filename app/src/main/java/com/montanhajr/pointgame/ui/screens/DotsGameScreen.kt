@@ -59,8 +59,15 @@ fun DotsGameScreen(
     var unlockedAchievementName by remember { mutableStateOf<String?>(null) }
     var matchStartTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
     
+    // Power-up UI states
     var showRewardFab by remember { mutableStateOf(false) }
     var rewardCountdown by remember { mutableIntStateOf(10) }
+    var currentPowerUp by remember { mutableStateOf(PowerUpType.UNDO) }
+    var inventoryPowerUp by remember { mutableStateOf<PowerUpType?>(null) }
+    
+    var showEagleEye by remember { mutableStateOf(false) }
+    var showXRay by remember { mutableStateOf(false) }
+    var isEraserActive by remember { mutableStateOf(false) }
     
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -92,12 +99,23 @@ fun DotsGameScreen(
         }
     }
 
-    LaunchedEffect(gameState.lines.size) {
-        if (!showRewardFab && !gameState.gameOver && gameState.currentPlayer == 1 && gameState.lines.isNotEmpty()) {
-            if (Random.nextFloat() < 0.25f) {
-                delay(1000)
-                showRewardFab = true
-                rewardCountdown = 10
+    // Lógica de aparecimento aleatório do FAB independente de movimentos
+    LaunchedEffect(gameState.gameOver) {
+        if (!gameState.gameOver) {
+            while (true) {
+                // Espera um tempo aleatório entre 15 e 45 segundos para tentar mostrar o FAB
+                val nextAttemptDelay = (15000L..45000L).random()
+                delay(nextAttemptDelay)
+                
+                // Só mostra se o inventário estiver vazio, se o FAB não estiver visível e se o jogo não acabou
+                if (inventoryPowerUp == null && !showRewardFab && !gameState.gameOver) {
+                    // Chance de 60% de aparecer após o delay
+                    if (Random.nextFloat() < 0.6f) {
+                        currentPowerUp = PowerUpType.entries.toTypedArray().random()
+                        showRewardFab = true
+                        rewardCountdown = 10
+                    }
+                }
             }
         }
     }
@@ -188,6 +206,11 @@ fun DotsGameScreen(
         matchStartTime = System.currentTimeMillis()
         showRestartDialog = false
         statsManager.setAdPending(false)
+        showEagleEye = false
+        showXRay = false
+        isEraserActive = false
+        showRewardFab = false
+        inventoryPowerUp = null
     }
 
     fun goToNextLevel() {
@@ -205,6 +228,8 @@ fun DotsGameScreen(
         matchStartTime = System.currentTimeMillis()
         showLevelCompleteDialog = false
         statsManager.setAdPending(false)
+        showRewardFab = false
+        inventoryPowerUp = null
     }
 
     fun handleUndo() {
@@ -212,6 +237,37 @@ fun DotsGameScreen(
             gameState = stateHistory.last()
             stateHistory = stateHistory.dropLast(1)
         }
+    }
+
+    fun activatePowerUp(type: PowerUpType) {
+        when (type) {
+            PowerUpType.UNDO -> handleUndo()
+            PowerUpType.EAGLE_EYE -> scope.launch {
+                showEagleEye = true
+                delay(3000)
+                showEagleEye = false
+            }
+            PowerUpType.XRAY_VISION -> scope.launch {
+                showXRay = true
+                delay(5000)
+                showXRay = false
+            }
+            PowerUpType.AUTO_SNAP -> {
+                val move = gameState.getAutoSnapMove()
+                if (move != null) {
+                    val previousTriangles = gameState.triangles.size
+                    stateHistory = stateHistory + gameState
+                    gameState = gameState.drawLine(move.first, move.second)
+                    scope.launch { if (gameState.triangles.size > previousTriangles) playerPointSound?.start() else connectionSound?.start() }
+                }
+            }
+            PowerUpType.DOUBLE_MOVE -> gameState = gameState.copy(doubleMoveActive = true)
+            PowerUpType.FREEZE_CPU -> gameState = gameState.copy(freezeCpuTurns = 1)
+            PowerUpType.ERASER -> isEraserActive = true
+            PowerUpType.GOLDEN_TRIANGLE -> gameState = gameState.copy(scoreMultiplier = 3, multiplierTurns = 2)
+            PowerUpType.PROTECTION_SHIELD -> gameState = gameState.copy(protectionShieldTurns = 2)
+        }
+        inventoryPowerUp = null // Remove do inventário após usar
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -227,37 +283,52 @@ fun DotsGameScreen(
                 onBackToMenu = onBackToMenu
             )
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                key(gameState) {
+                key(gameState, showEagleEye, showXRay, isEraserActive) {
                     GameBoard(
                         gameState = gameState,
                         enabled = gameMode != GameMode.VS_CPU || gameState.currentPlayer == 1,
+                        showEagleEye = showEagleEye,
+                        showXRay = showXRay,
+                        isEraserActive = isEraserActive,
                         onLineDrawn = { startId, endId ->
-                            val previousTriangles = gameState.triangles.size
-                            stateHistory = stateHistory + gameState
-                            gameState = gameState.drawLine(startId, endId)
-                            scope.launch {
-                                try {
-                                    if (gameState.triangles.size > previousTriangles) playerPointSound?.start() else connectionSound?.start()
-                                } catch (e: Exception) {}
+                            if (gameState.isValidMove(startId, endId)) {
+                                val previousTriangles = gameState.triangles.size
+                                stateHistory = stateHistory + gameState
+                                gameState = gameState.drawLine(startId, endId)
+                                scope.launch {
+                                    try {
+                                        if (gameState.triangles.size > previousTriangles) playerPointSound?.start() else connectionSound?.start()
+                                    } catch (e: Exception) {}
+                                }
                             }
+                        },
+                        onLineErased = { line ->
+                            gameState = gameState.removeLine(line)
+                            isEraserActive = false
                         }
                     )
                 }
 
-                RewardUndoFab(
-                    visible = showRewardFab && !gameState.gameOver && stateHistory.isNotEmpty(),
+                RewardPowerUpFab(
+                    visible = showRewardFab && !gameState.gameOver && (currentPowerUp != PowerUpType.UNDO || stateHistory.isNotEmpty()),
                     countdown = rewardCountdown,
-                    onUndo = {
+                    powerUpType = currentPowerUp,
+                    onActivate = { type ->
                         val activity = context as? Activity
                         if (activity != null) {
                             showRewardFab = false
                             AdManager.showRewardedAd(
                                 activity = activity,
-                                onRewardEarned = { handleUndo() },
-                                onAdFailed = { handleUndo() }
+                                onRewardEarned = { inventoryPowerUp = type },
+                                onAdFailed = { inventoryPowerUp = type }
                             )
                         }
                     }
+                )
+
+                InventoryPowerUpButton(
+                    powerUpType = inventoryPowerUp,
+                    onActivate = { inventoryPowerUp?.let { activatePowerUp(it) } }
                 )
             }
             AdBanner(onPremiumClick = { showPremiumDialog = true })
@@ -265,6 +336,7 @@ fun DotsGameScreen(
     }
 
     GameDialogManager(
+        gameState = gameState,
         showRules = showRulesDialog,
         showRestart = showRestartDialog,
         showPremium = showPremiumDialog,

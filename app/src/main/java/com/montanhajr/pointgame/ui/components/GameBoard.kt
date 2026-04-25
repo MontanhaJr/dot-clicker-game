@@ -2,6 +2,7 @@ package com.montanhajr.pointgame.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,15 +17,20 @@ import androidx.compose.ui.unit.dp
 import com.montanhajr.pointgame.logic.GameState
 import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.models.DotPoint
-import com.montanhajr.pointgame.models.PlayerColors
+import com.montanhajr.pointgame.models.Line
 import com.montanhajr.pointgame.models.getStylePlayerColor
+import com.montanhajr.pointgame.models.getStyleUiColors
 import kotlin.math.sqrt
 
 @Composable
 fun GameBoard(
     gameState: GameState,
     enabled: Boolean,
-    onLineDrawn: (Int, Int) -> Unit
+    showEagleEye: Boolean = false,
+    showXRay: Boolean = false,
+    isEraserActive: Boolean = false,
+    onLineDrawn: (Int, Int) -> Unit,
+    onLineErased: (Line) -> Unit = {}
 ) {
     var dragStartId by remember { mutableStateOf<Int?>(null) }
     var currentDragPosition by remember { mutableStateOf<Offset?>(null) }
@@ -33,6 +39,7 @@ fun GameBoard(
     val density = LocalDensity.current
     val touchThreshold = with(density) { 44.dp.toPx() }
     val style = gameState.boardStyle
+    val uiColors = remember(style) { getStyleUiColors(style) }
 
     val pointBaseColor = when (style) {
         BoardStyle.MINIMALIST_WHITE -> Color(0xFF333333)
@@ -42,7 +49,7 @@ fun GameBoard(
         BoardStyle.CYBERPUNK_GLITCH -> Color(0xFF00FFFF)
         BoardStyle.ANCIENT_SCROLL -> Color(0xFF4A3728)
         BoardStyle.DEEP_SEA -> Color(0xFF94D2BD)
-        BoardStyle.FOUNDER_GOLD -> Color(0xFF8B7310) // Dourado escuro para os pontos
+        BoardStyle.FOUNDER_GOLD -> Color(0xFF8B7310)
         else -> Color(0xFFCCCCCC)
     }
 
@@ -77,39 +84,81 @@ fun GameBoard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp)
-                .pointerInput(gameState.gameOver, enabled) {
+                .pointerInput(gameState.gameOver, enabled, isEraserActive) {
                     if (!gameState.gameOver && enabled) {
-                        detectDragGestures(
-                            onDragStart = { offset ->
-                                val pointId = getNearestPointId(offset, scaledPoints, touchThreshold)
-                                if (pointId != null) {
-                                    dragStartId = pointId
-                                    currentDragPosition = offset
+                        if (isEraserActive) {
+                            detectTapGestures { offset ->
+                                val cpuLines = gameState.lines.filter { it.player == 2 }
+                                val nearestLine = cpuLines.find { line ->
+                                    val start = scaledPoints.find { it.id == line.startId }?.position ?: return@find false
+                                    val end = scaledPoints.find { it.id == line.endId }?.position ?: return@find false
+                                    distanceToLine(offset, start, end) < 40f
                                 }
-                            },
-                            onDrag = { change, _ ->
-                                currentDragPosition = change.position
-                                hoveredPointId = getNearestPointId(change.position, scaledPoints, touchThreshold)
-                            },
-                            onDragEnd = {
-                                if (dragStartId != null && hoveredPointId != null) {
-                                    if (gameState.isValidMove(dragStartId!!, hoveredPointId!!)) {
-                                        onLineDrawn(dragStartId!!, hoveredPointId!!)
-                                    }
-                                }
-                                dragStartId = null
-                                currentDragPosition = null
-                                hoveredPointId = null
-                            },
-                            onDragCancel = {
-                                dragStartId = null
-                                currentDragPosition = null
-                                hoveredPointId = null
+                                nearestLine?.let { onLineErased(it) }
                             }
-                        )
+                        } else {
+                            detectDragGestures(
+                                onDragStart = { offset ->
+                                    val pointId = getNearestPointId(offset, scaledPoints, touchThreshold)
+                                    if (pointId != null) {
+                                        dragStartId = pointId
+                                        currentDragPosition = offset
+                                    }
+                                },
+                                onDrag = { change, _ ->
+                                    currentDragPosition = change.position
+                                    hoveredPointId = getNearestPointId(change.position, scaledPoints, touchThreshold)
+                                },
+                                onDragEnd = {
+                                    if (dragStartId != null && hoveredPointId != null) {
+                                        if (gameState.isValidMove(dragStartId!!, hoveredPointId!!)) {
+                                            onLineDrawn(dragStartId!!, hoveredPointId!!)
+                                        }
+                                    }
+                                    dragStartId = null
+                                    currentDragPosition = null
+                                    hoveredPointId = null
+                                },
+                                onDragCancel = {
+                                    dragStartId = null
+                                    currentDragPosition = null
+                                    hoveredPointId = null
+                                }
+                            )
+                        }
                     }
                 }
         ) {
+            // X-Ray Vision: Show all possible connections
+            if (showXRay) {
+                gameState.getAllPossibleConnections().forEach { (sId, eId) ->
+                    val start = scaledPoints.find { it.id == sId }?.position ?: return@forEach
+                    val end = scaledPoints.find { it.id == eId }?.position ?: return@forEach
+                    drawLine(
+                        color = uiColors.xRay.copy(alpha = 0.2f),
+                        start = start,
+                        end = end,
+                        strokeWidth = 2f,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 0f)
+                    )
+                }
+            }
+
+            // Eagle Eye: Highlight completable triangles
+            if (showEagleEye) {
+                gameState.getAllCompletableLines().forEach { (sId, eId) ->
+                    val start = scaledPoints.find { it.id == sId }?.position ?: return@forEach
+                    val end = scaledPoints.find { it.id == eId }?.position ?: return@forEach
+                    drawLine(
+                        color = uiColors.eagleEye.copy(alpha = 0.6f),
+                        start = start,
+                        end = end,
+                        strokeWidth = 10f,
+                        cap = StrokeCap.Round
+                    )
+                }
+            }
+
             // Triângulos
             gameState.triangles.forEach { triangle ->
                 val p1 = scaledPoints.find { it.id == triangle.p1Id }
@@ -155,22 +204,9 @@ fun GameBoard(
                     }
 
                     if (style == BoardStyle.FOUNDER_GOLD) {
-                        // Borda para Player 1 (Ouro Claro) ou CPU (Cinza Escuro)
                         val borderColor = if (line.player == 1) Color(0xFFFFFACD) else Color(0xFF222222)
-                        drawLine(
-                            color = borderColor,
-                            start = start.position,
-                            end = end.position,
-                            strokeWidth = 10f, // Borda externa fina
-                            cap = StrokeCap.Round
-                        )
-                        drawLine(
-                            color = lineColor,
-                            start = start.position,
-                            end = end.position,
-                            strokeWidth = 6f,
-                            cap = StrokeCap.Round
-                        )
+                        drawLine(color = borderColor, start = start.position, end = end.position, strokeWidth = 10f, cap = StrokeCap.Round)
+                        drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 6f, cap = StrokeCap.Round)
                     } else if (style == BoardStyle.RETRO_ARCADE) {
                         drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 8f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
                     } else {
@@ -239,4 +275,12 @@ private fun getNearestPointId(offset: Offset, points: List<DotPoint>, threshold:
         }
     }
     return nearestId
+}
+
+private fun distanceToLine(p: Offset, s: Offset, e: Offset): Float {
+    val l2 = (e.x - s.x) * (e.x - s.x) + (e.y - s.y) * (e.y - s.y)
+    if (l2 == 0f) return sqrt((p.x - s.x) * (p.x - s.x) + (p.y - s.y) * (p.y - s.y))
+    var t = ((p.x - s.x) * (e.x - s.x) + (p.y - s.y) * (e.y - s.y)) / l2
+    t = t.coerceIn(0f, 1f)
+    return sqrt((p.x - (s.x + t * (e.x - s.x))) * (p.x - (s.x + t * (e.x - s.x))) + (p.y - (s.y + t * (e.y - s.y))) * (p.y - (s.y + t * (e.y - s.y))))
 }

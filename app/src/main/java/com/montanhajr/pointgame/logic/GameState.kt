@@ -17,7 +17,14 @@ data class GameState(
     val isCpuGame: Boolean = false,
     val difficulty: Difficulty = Difficulty.MEDIUM,
     val boardStyle: BoardStyle = BoardStyle.GALAXY,
-    val careerLevel: Int? = null
+    val careerLevel: Int? = null,
+    
+    // Power-up states
+    val freezeCpuTurns: Int = 0,
+    val protectionShieldTurns: Int = 0,
+    val scoreMultiplier: Int = 1,
+    val multiplierTurns: Int = 0,
+    val doubleMoveActive: Boolean = false
 ) {
     companion object {
         fun createNew(
@@ -37,7 +44,7 @@ data class GameState(
             val canvasHeight = 1200f
             val padding = 150f
             var attempts = 0
-            val maxAttempts = 2000 // Aumentado para suportar mais pontos em níveis altos
+            val maxAttempts = 2000
 
             while (points.size < numPoints && attempts < maxAttempts) {
                 val x = padding + random.nextFloat() * (canvasWidth - 2 * padding)
@@ -75,30 +82,59 @@ data class GameState(
     }
 
     fun drawLine(startId: Int, endId: Int): GameState {
-        if (!isValidMove(startId, endId)) return this
+        if (!isValidMove(startId, endId) || gameOver) return this
 
+        val isCpuTurn = isCpuGame && currentPlayer == 2
         val newLine = Line(startId, endId, currentPlayer)
         val newLines = lines + newLine
         
         val newlyFoundTriangles = findTrianglesForLine(newLine, newLines)
-        val newTriangles = triangles + newlyFoundTriangles
+        val finalTrianglesToScore = if (isCpuTurn && protectionShieldTurns > 0) emptyList() else newlyFoundTriangles
         
-        val trianglesCompleted = newlyFoundTriangles.isNotEmpty()
+        val newTriangles = triangles + finalTrianglesToScore
+        val trianglesCompleted = finalTrianglesToScore.isNotEmpty()
         
         val newScores = playerScores.toMutableList()
         if (trianglesCompleted) {
-            newScores[currentPlayer - 1] += newlyFoundTriangles.size
+            val multiplier = if (!isCpuTurn) scoreMultiplier else 1
+            newScores[currentPlayer - 1] += finalTrianglesToScore.size * multiplier
         }
 
         val isGameOver = !hasValidMovesLeft(newLines, newTriangles)
-        var nextPlayer = if (trianglesCompleted && !isGameOver) currentPlayer 
-                        else if (currentPlayer >= numPlayers) 1 else currentPlayer + 1
+        
+        var nextFreezeTurns = freezeCpuTurns
+        var nextShieldTurns = protectionShieldTurns
+        var nextMultiplierTurns = multiplierTurns
+        var nextScoreMultiplier = scoreMultiplier
+        var nextDoubleMove = doubleMoveActive
 
+        var nextPlayer = currentPlayer
+        
         if (isGameOver) {
-            val maxScore = newScores.maxOrNull() ?: 0
-            val winnerIndex = newScores.indexOf(maxScore)
-            if (winnerIndex != -1) {
-                nextPlayer = winnerIndex + 1
+            val winnerIdx = getWinnerIndexInternal(newScores)
+            nextPlayer = winnerIdx + 1
+        } else {
+            if (trianglesCompleted) {
+                nextPlayer = currentPlayer
+            } else {
+                if (nextDoubleMove) {
+                    nextDoubleMove = false
+                } else {
+                    nextPlayer = if (currentPlayer >= numPlayers) 1 else currentPlayer + 1
+                    
+                    if (nextPlayer == 1) {
+                        if (nextShieldTurns > 0) nextShieldTurns--
+                        if (nextMultiplierTurns > 0) {
+                            nextMultiplierTurns--
+                            if (nextMultiplierTurns == 0) nextScoreMultiplier = 1
+                        }
+                    }
+                    
+                    if (isCpuGame && nextPlayer == 2 && nextFreezeTurns > 0) {
+                        nextFreezeTurns--
+                        nextPlayer = 1
+                    }
+                }
             }
         }
 
@@ -107,8 +143,107 @@ data class GameState(
             triangles = newTriangles,
             currentPlayer = nextPlayer,
             playerScores = newScores,
-            gameOver = isGameOver
+            gameOver = isGameOver,
+            freezeCpuTurns = nextFreezeTurns,
+            protectionShieldTurns = nextShieldTurns,
+            multiplierTurns = nextMultiplierTurns,
+            scoreMultiplier = nextScoreMultiplier,
+            doubleMoveActive = nextDoubleMove
         )
+    }
+
+    fun removeLine(line: Line): GameState {
+        val lineExists = lines.any { (it.startId == line.startId && it.endId == line.endId) || (it.startId == line.endId && it.endId == line.startId) }
+        if (!lineExists) return this
+        
+        val isPartOfTriangle = triangles.any { t ->
+            val ids = setOf(t.p1Id, t.p2Id, t.p3Id)
+            ids.contains(line.startId) && ids.contains(line.endId)
+        }
+        if (isPartOfTriangle) return this
+
+        val newLines = lines.filterNot { (it.startId == line.startId && it.endId == line.endId) || (it.startId == line.endId && it.endId == line.startId) }
+        return copy(lines = newLines)
+    }
+
+    fun getAutoSnapMove(): Pair<Int, Int>? {
+        for (i in points.indices) {
+            for (j in i + 1 until points.size) {
+                if (isValidMove(points[i].id, points[j].id)) {
+                    val testLines = lines + Line(points[i].id, points[j].id, currentPlayer)
+                    if (findTrianglesForLine(testLines.last(), testLines).isNotEmpty()) {
+                        return Pair(points[i].id, points[j].id)
+                    }
+                }
+            }
+        }
+        
+        val allPossibleMoves = mutableListOf<Pair<Int, Int>>()
+        for (i in points.indices) {
+            for (j in i + 1 until points.size) {
+                if (isValidMove(points[i].id, points[j].id)) {
+                    allPossibleMoves.add(Pair(points[i].id, points[j].id))
+                }
+            }
+        }
+        
+        if (allPossibleMoves.isEmpty()) return null
+        
+        val safeMoves = allPossibleMoves.filter { move ->
+            val testState = this.copy(lines = lines + Line(move.first, move.second, currentPlayer))
+            var cpuCanScore = false
+            for (x in points.indices) {
+                for (y in x + 1 until points.size) {
+                    if (testState.isValidMove(points[x].id, points[y].id)) {
+                        val cpuLines = testState.lines + Line(points[x].id, points[y].id, 2)
+                        if (testState.findTrianglesForLine(cpuLines.last(), cpuLines).isNotEmpty()) {
+                            cpuCanScore = true
+                            break
+                        }
+                    }
+                }
+                if (cpuCanScore) break
+            }
+            !cpuCanScore
+        }
+        
+        return if (safeMoves.isNotEmpty()) safeMoves.random() else allPossibleMoves.random()
+    }
+
+    fun getAllCompletableLines(): List<Pair<Int, Int>> {
+        val completable = mutableListOf<Pair<Int, Int>>()
+        for (i in points.indices) {
+            for (j in i + 1 until points.size) {
+                if (isValidMove(points[i].id, points[j].id)) {
+                    val testLines = lines + Line(points[i].id, points[j].id, currentPlayer)
+                    if (findTrianglesForLine(testLines.last(), testLines).isNotEmpty()) {
+                        completable.add(Pair(points[i].id, points[j].id))
+                    }
+                }
+            }
+        }
+        return completable
+    }
+
+    fun getAllPossibleConnections(): List<Pair<Int, Int>> {
+        val connections = mutableListOf<Pair<Int, Int>>()
+        for (i in points.indices) {
+            for (j in i + 1 until points.size) {
+                if (isValidMove(points[i].id, points[j].id)) {
+                    connections.add(Pair(points[i].id, points[j].id))
+                }
+            }
+        }
+        return connections
+    }
+
+    fun getWinnerIndex(): Int {
+        return getWinnerIndexInternal(playerScores)
+    }
+
+    private fun getWinnerIndexInternal(scores: List<Int>): Int {
+        val maxScore = scores.maxOrNull() ?: 0
+        return scores.indexOf(maxScore)
     }
 
     private fun findTrianglesForLine(lastLine: Line, allLines: List<Line>): List<Triangle> {
@@ -224,10 +359,14 @@ data class GameState(
     fun getWinnerMessage(isCpuGame: Boolean): String {
         val maxScore = playerScores.maxOrNull() ?: 0
         val winners = playerScores.indices.filter { playerScores[it] == maxScore }
-        return when {
-            winners.size > 1 -> "Empate! 🤝"
-            isCpuGame && winners[0] == 1 -> "CPU venceu! 🤖"
-            else -> "${playerNames[winners[0]]} venceu! 🎉"
+        
+        if (winners.size > 1) return "Empate! 🤝"
+        
+        val winnerIndex = getWinnerIndex()
+        return if (isCpuGame && winnerIndex == 1) {
+            "CPU venceu! 🤖"
+        } else {
+            "${playerNames[winnerIndex]} venceu! 🎉"
         }
     }
 }

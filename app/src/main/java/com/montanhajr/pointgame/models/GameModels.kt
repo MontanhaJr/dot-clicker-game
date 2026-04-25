@@ -89,32 +89,58 @@ fun getStyleUiColors(style: BoardStyle): UiThemeColors {
         BoardStyle.MINIMALIST_WHITE -> UiThemeColors(
             headerBg = Color(0xFFF0F0F0).copy(alpha = 0.7f),
             text = Color(0xFF1A1A2E),
-            isDark = false
+            isDark = false,
+            eagleEye = Color(0xFFFF5722), // Deep Orange
+            xRay = Color(0xFF2196F3)      // Blue
         )
         BoardStyle.PAPER_NOTEBOOK -> UiThemeColors(
             headerBg = Color(0xFFFCF5E5).copy(alpha = 0.7f),
             text = Color(0xFF333333),
-            isDark = false
+            isDark = false,
+            eagleEye = Color(0xFFD32F2F), // Red
+            xRay = Color(0xFF1976D2)      // Dark Blue
         )
         BoardStyle.ANCIENT_SCROLL -> UiThemeColors(
             headerBg = Color(0xFFD4B483).copy(alpha = 0.7f),
             text = Color(0xFF3E2723),
-            isDark = false
+            isDark = false,
+            eagleEye = Color(0xFF5D4037), // Dark Brown
+            xRay = Color(0xFF0D47A1)      // Navy Blue
         )
         BoardStyle.CHALKBOARD -> UiThemeColors(
             headerBg = Color(0xFF1B2621).copy(alpha = 0.7f),
             text = Color.White,
-            isDark = true
+            isDark = true,
+            eagleEye = Color(0xFFFFEB3B), // Yellow
+            xRay = Color.White
         )
         BoardStyle.FOUNDER_GOLD -> UiThemeColors(
             headerBg = Color(0xFF1A1A1A).copy(alpha = 0.7f),
             text = Color(0xFFFFD700),
-            isDark = true
+            isDark = true,
+            eagleEye = Color(0xFF00E5FF), // Bright Cyan
+            xRay = Color.White
+        )
+        BoardStyle.CYBERPUNK_GLITCH -> UiThemeColors(
+            headerBg = Color(0xFF1A1A2E).copy(alpha = 0.7f),
+            text = Color.White,
+            isDark = true,
+            eagleEye = Color(0xFF00FF00), // Lime
+            xRay = Color(0xFFFF00FF)      // Magenta
+        )
+        BoardStyle.RETRO_ARCADE -> UiThemeColors(
+            headerBg = Color(0xFF1A1A2E).copy(alpha = 0.7f),
+            text = Color.White,
+            isDark = true,
+            eagleEye = Color(0xFFFFEB3B), // Yellow
+            xRay = Color(0xFF00FFFF)      // Cyan
         )
         else -> UiThemeColors(
             headerBg = Color(0xFF1A1A2E).copy(alpha = 0.7f),
             text = Color.White,
-            isDark = true
+            isDark = true,
+            eagleEye = Color(0xFF00FFFF), // Cyan
+            xRay = Color.White
         )
     }
 }
@@ -122,5 +148,7 @@ fun getStyleUiColors(style: BoardStyle): UiThemeColors {
 data class UiThemeColors(
     val headerBg: Color,
     val text: Color,
-    val isDark: Boolean
+    val isDark: Boolean,
+    val eagleEye: Color,
+    val xRay: Color
 )

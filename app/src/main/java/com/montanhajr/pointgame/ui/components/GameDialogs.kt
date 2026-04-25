@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.NavigateNext
+import androidx.compose.material.icons.filled.SentimentVeryDissatisfied
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,9 +24,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.montanhajr.pointgame.R
+import com.montanhajr.pointgame.logic.GameState
 
 @Composable
 fun GameDialogManager(
+    gameState: GameState,
     showRules: Boolean,
     showRestart: Boolean,
     showPremium: Boolean,
@@ -60,9 +63,136 @@ fun GameDialogManager(
         )
     }
 
+    // Se o jogo acabou e não foi uma vitória na carreira, mostramos Derrota ou GameOver genérico
+    if (gameState.gameOver && !showLevelComplete) {
+        val isCpuWin = gameState.isCpuGame && gameState.getWinnerIndex() == 1
+        
+        if (gameState.careerLevel != null && isCpuWin) {
+            DefeatDialog(
+                level = gameState.careerLevel,
+                onRetry = onConfirmRestart,
+                onBackToMap = onBackToMenu
+            )
+        } else {
+            GameOverDialog(
+                message = gameState.getWinnerMessage(gameState.isCpuGame),
+                onRestart = onConfirmRestart,
+                onBackToMenu = onBackToMenu
+            )
+        }
+    }
+
     if (showFallbackInterstitial) {
         FallbackInterstitialDialog(onDismiss = onDismissFallback, onPremiumClick = onPremiumFromFallback)
     }
+}
+
+@Composable
+fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
+    Dialog(
+        onDismissRequest = { },
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = Color(0xFF1A1A2E),
+            tonalElevation = 8.dp,
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.SentimentVeryDissatisfied,
+                    contentDescription = null,
+                    tint = Color(0xFFE91E63),
+                    modifier = Modifier.size(64.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Não foi dessa vez!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "A CPU dominou o nível $level. Deseja tentar novamente?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.LightGray,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                Button(
+                    onClick = onRetry,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("TENTAR NOVAMENTE", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                OutlinedButton(
+                    onClick = onBackToMap,
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Map, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("VOLTAR PARA O MAPA", color = Color.White, fontSize = 14.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GameOverDialog(message: String, onRestart: () -> Unit, onBackToMenu: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = { },
+        containerColor = Color(0xFF1A1A2E),
+        titleContentColor = Color.White,
+        textContentColor = Color.LightGray,
+        title = { Text(text = "Fim de Jogo", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+        text = { 
+            Text(
+                text = message,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onRestart,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+            ) {
+                Text("RECOMECAR", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onBackToMenu,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("VOLTAR AO MENU", color = Color.Gray)
+            }
+        }
+    )
 }
 
 @Composable
