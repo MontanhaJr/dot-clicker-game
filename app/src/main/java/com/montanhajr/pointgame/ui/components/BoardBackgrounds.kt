@@ -17,12 +17,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.models.BoardStyle
+import com.montanhajr.pointgame.ui.theme.PopDarkBlue
 import kotlin.math.sin
 import kotlin.random.Random
 
 @Composable
 fun BoardBackground(style: BoardStyle) {
     when (style) {
+        BoardStyle.DEFAULT_POP -> DefaultPopBackground()
         BoardStyle.GALAXY -> GalaxyBackground()
         BoardStyle.NEON_NIGHT -> NeonNightBackground()
         BoardStyle.MINIMALIST_WHITE -> MinimalistWhiteBackground()
@@ -33,6 +35,20 @@ fun BoardBackground(style: BoardStyle) {
         BoardStyle.ANCIENT_SCROLL -> AncientScrollBackground()
         BoardStyle.DEEP_SEA -> DeepSeaBackground()
         BoardStyle.FOUNDER_GOLD -> FounderGoldBackground()
+    }
+}
+
+@Composable
+fun DefaultPopBackground() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.app_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        // Adicionamos uma sobreposição para garantir legibilidade das linhas
+        Box(modifier = Modifier.fillMaxSize().background(PopDarkBlue.copy(alpha = 0.7f)))
     }
 }
 

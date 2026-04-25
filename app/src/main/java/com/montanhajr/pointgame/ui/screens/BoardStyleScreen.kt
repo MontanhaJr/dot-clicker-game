@@ -101,7 +101,7 @@ fun BoardStyleScreen(
                 ) {
                     items(BoardStyle.entries.toTypedArray()) { style ->
                         val isLocked = when (style) {
-                            BoardStyle.GALAXY -> false
+                            BoardStyle.DEFAULT_POP -> false
                             BoardStyle.FOUNDER_GOLD -> !isFounderUnlocked && !isDebug
                             else -> !canSelectAll
                         }
@@ -149,6 +149,7 @@ fun PopStyleCard(
     onClick: () -> Unit
 ) {
     val styleName = when (style) {
+        BoardStyle.DEFAULT_POP -> "PADRÃO DOT POP!"
         BoardStyle.GALAXY -> "GALÁXIA"
         BoardStyle.NEON_NIGHT -> "NEON NIGHT"
         BoardStyle.MINIMALIST_WHITE -> "MINIMALISTA"
