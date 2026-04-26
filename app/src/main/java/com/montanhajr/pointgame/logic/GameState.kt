@@ -89,6 +89,8 @@ data class GameState(
         val newLines = lines + newLine
         
         val newlyFoundTriangles = findTrianglesForLine(newLine, newLines)
+        
+        // Filter triangles if shield is active for human (meaning CPU cannot score)
         val finalTrianglesToScore = if (isCpuTurn && protectionShieldTurns > 0) emptyList() else newlyFoundTriangles
         
         val newTriangles = triangles + finalTrianglesToScore
@@ -115,6 +117,7 @@ data class GameState(
             nextPlayer = winnerIdx + 1
         } else {
             if (trianglesCompleted) {
+                // Jogador que pontuou joga novamente
                 nextPlayer = currentPlayer
             } else {
                 if (nextDoubleMove) {
@@ -152,18 +155,60 @@ data class GameState(
         )
     }
 
-    fun removeLine(line: Line): GameState {
-        val lineExists = lines.any { (it.startId == line.startId && it.endId == line.endId) || (it.startId == line.endId && it.endId == line.startId) }
-        if (!lineExists) return this
+    fun skipCpuTurnDueToShield(): GameState {
+        if (!isCpuGame || currentPlayer != 2 || protectionShieldTurns <= 0) return this
         
-        val isPartOfTriangle = triangles.any { t ->
-            val ids = setOf(t.p1Id, t.p2Id, t.p3Id)
-            ids.contains(line.startId) && ids.contains(line.endId)
-        }
-        if (isPartOfTriangle) return this
+        var nextShieldTurns = protectionShieldTurns - 1
+        return copy(
+            currentPlayer = 1,
+            protectionShieldTurns = nextShieldTurns
+        )
+    }
 
-        val newLines = lines.filterNot { (it.startId == line.startId && it.endId == line.endId) || (it.startId == line.endId && it.endId == line.startId) }
-        return copy(lines = newLines)
+    fun getAllValidMoves(): List<Pair<Int, Int>> {
+        val moves = mutableListOf<Pair<Int, Int>>()
+        for (i in points.indices) {
+            for (j in i + 1 until points.size) {
+                if (isValidMove(points[i].id, points[j].id)) {
+                    moves.add(points[i].id to points[j].id)
+                }
+            }
+        }
+        return moves
+    }
+
+    fun moveCompletesTriangle(move: Pair<Int, Int>): Boolean {
+        val newLine = Line(move.first, move.second, currentPlayer)
+        val testLines = lines + newLine
+        return findTrianglesForLine(newLine, testLines).isNotEmpty()
+    }
+
+    fun removeLine(line: Line): GameState {
+        val targetLine = lines.find { 
+            (it.startId == line.startId && it.endId == line.endId) || 
+            (it.startId == line.endId && it.endId == line.startId) 
+        } ?: return this
+        
+        val affectedTriangles = triangles.filter { t ->
+            val ids = setOf(t.p1Id, t.p2Id, t.p3Id)
+            ids.contains(targetLine.startId) && ids.contains(targetLine.endId)
+        }
+
+        val newScores = playerScores.toMutableList()
+        affectedTriangles.forEach { t ->
+            if (newScores[t.owner - 1] > 0) {
+                newScores[t.owner - 1] -= 1
+            }
+        }
+
+        val newLines = lines.filterNot { it === targetLine }
+        val newTriangles = triangles.filterNot { affectedTriangles.contains(it) }
+        
+        return copy(
+            lines = newLines, 
+            triangles = newTriangles,
+            playerScores = newScores
+        )
     }
 
     fun getAutoSnapMove(): Pair<Int, Int>? {

@@ -13,7 +13,7 @@ enum class PowerUpType(
     AUTO_SNAP("IMÃ", R.drawable.magnetic_icon, "Fecha um triângulo aleatório"),
     DOUBLE_MOVE("DUPLO", R.drawable.double_move_icon, "Jogue duas vezes"),
     FREEZE_CPU("GELO", R.drawable.freeze_icon, "Congela a CPU por 1 turno"),
-    ERASER("BORRACHA", R.drawable.erase_icon, "Apaga uma linha da CPU"),
+    ERASER("BORRACHA", R.drawable.erase_icon, "Apaga qualquer linha do tabuleiro"),
     GOLDEN_TRIANGLE("OURO", R.drawable.golden_tri_icon, "Triângulos valem 3x"),
     PROTECTION_SHIELD("ESCUDO", R.drawable.shield_icon, "CPU não pode pontuar")
 }

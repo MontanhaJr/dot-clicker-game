@@ -6,7 +6,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -44,14 +43,6 @@ fun GameBoard(
 
     val pointBaseColor = when (style) {
         BoardStyle.DEFAULT_POP -> Color.White
-        BoardStyle.MINIMALIST_WHITE -> Color(0xFF333333)
-        BoardStyle.PAPER_NOTEBOOK -> Color(0xFF333333)
-        BoardStyle.RETRO_ARCADE -> Color(0xFF00FF00)
-        BoardStyle.CHALKBOARD -> Color(0xFFEEEEEE)
-        BoardStyle.CYBERPUNK_GLITCH -> Color(0xFF00FFFF)
-        BoardStyle.ANCIENT_SCROLL -> Color(0xFF4A3728)
-        BoardStyle.DEEP_SEA -> Color(0xFF94D2BD)
-        BoardStyle.FOUNDER_GOLD -> Color(0xFF8B7310)
         else -> Color(0xFFCCCCCC)
     }
 
@@ -68,7 +59,7 @@ fun GameBoard(
         val canvasHeight = maxHeight.value * density.density
 
         val scaledPoints = remember(canvasWidth, canvasHeight, gameState.points) {
-            val paddingPx = 24.dp.value * density.density
+            val paddingPx = 32.dp.value * density.density
             val usableWidth = canvasWidth - (paddingPx * 2)
             val usableHeight = canvasHeight - (paddingPx * 2)
 
@@ -85,18 +76,16 @@ fun GameBoard(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
-                .pointerInput(gameState.gameOver, enabled, isEraserActive) {
+                .pointerInput(gameState, isEraserActive, enabled) {
                     if (!gameState.gameOver && enabled) {
                         if (isEraserActive) {
                             detectTapGestures { offset ->
-                                val cpuLines = gameState.lines.filter { it.player == 2 }
-                                val nearestLine = cpuLines.find { line ->
+                                val targetLine = gameState.lines.find { line ->
                                     val start = scaledPoints.find { it.id == line.startId }?.position ?: return@find false
                                     val end = scaledPoints.find { it.id == line.endId }?.position ?: return@find false
-                                    distanceToLine(offset, start, end) < 40f
+                                    distanceToLine(offset, start, end) < 50f
                                 }
-                                nearestLine?.let { onLineErased(it) }
+                                targetLine?.let { onLineErased(it) }
                             }
                         } else {
                             detectDragGestures(
@@ -137,11 +126,11 @@ fun GameBoard(
                     val start = scaledPoints.find { it.id == sId }?.position ?: return@forEach
                     val end = scaledPoints.find { it.id == eId }?.position ?: return@forEach
                     drawLine(
-                        color = uiColors.xRay.copy(alpha = 0.2f),
+                        color = uiColors.xRay.copy(alpha = 0.5f),
                         start = start,
                         end = end,
-                        strokeWidth = 2f,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 0f)
+                        strokeWidth = 3f,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                     )
                 }
             }
@@ -177,16 +166,10 @@ fun GameBoard(
                     }
                     
                     if (style == BoardStyle.DEFAULT_POP) {
-                        // NOVO DESIGN POP!: Sólido com textura brilhante
-                        // Cor base + sobreposição branca para clarear
                         drawPath(path = path, color = color)
                         drawPath(path = path, color = Color.White.copy(alpha = 0.2f))
-                        
-                        // Efeito de faceta/cristal (brilho geométrico) - mais suave
                         val cX = (p1.position.x + p2.position.x + p3.position.x) / 3
                         val cY = (p1.position.y + p2.position.y + p3.position.y) / 3
-                        
-                        // Parte superior do cristal - reduzida opacidade
                         val facetPath = Path().apply {
                             moveTo(p1.position.x, p1.position.y)
                             lineTo(p2.position.x, p2.position.y)
@@ -194,31 +177,8 @@ fun GameBoard(
                             close()
                         }
                         drawPath(path = facetPath, color = Color.White.copy(alpha = 0.15f))
-                        
-                        // Brilho radial central - MUITO mais suave e espalhado
-                        drawPath(
-                            path = path,
-                            brush = Brush.radialGradient(
-                                colors = listOf(Color.White.copy(alpha = 0.2f), Color.Transparent),
-                                center = Offset(cX, cY),
-                                radius = 200f // Raio aumentado para suavizar
-                            )
-                        )
-                        
-                        // Pequenas partículas de brilho (Sparkles)
-                        val rand = java.util.Random((triangle.p1Id + triangle.p2Id + triangle.p3Id).toLong())
-                        repeat(4) {
-                            val r1 = rand.nextFloat(); val r2 = rand.nextFloat() * (1f - r1); val r3 = 1f - r1 - r2
-                            val px = r1 * p1.position.x + r2 * p2.position.x + r3 * p3.position.x
-                            val py = r1 * p1.position.y + r2 * p2.position.y + r3 * p3.position.y
-                            drawCircle(
-                                color = Color.White.copy(alpha = 0.4f),
-                                radius = rand.nextFloat() * 2f + 1f,
-                                center = Offset(px, py)
-                            )
-                        }
+                        drawPath(path = path, brush = Brush.radialGradient(colors = listOf(Color.White.copy(alpha = 0.2f), Color.Transparent), center = Offset(cX, cY), radius = 200f))
                     } else {
-                        // Design clássico translúcido para outros estilos
                         drawPath(path = path, color = color.copy(alpha = 0.15f))
                     }
 
@@ -229,17 +189,11 @@ fun GameBoard(
                     drawContext.canvas.nativeCanvas.drawText(
                         letter, centerX, centerY + 15,
                         android.graphics.Paint().apply {
-                            this.color = if (style == BoardStyle.DEFAULT_POP) {
-                                android.graphics.Color.WHITE
-                            } else {
-                                android.graphics.Color.argb((color.alpha * 255).toInt(), (color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt())
-                            }
+                            this.color = if (style == BoardStyle.DEFAULT_POP) android.graphics.Color.WHITE else android.graphics.Color.argb((color.alpha * 255).toInt(), (color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt())
                             textSize = 45f
                             textAlign = android.graphics.Paint.Align.CENTER
                             isFakeBoldText = true
-                            if (style == BoardStyle.DEFAULT_POP) {
-                                setShadowLayer(10f, 0f, 0f, android.graphics.Color.BLACK)
-                            }
+                            if (style == BoardStyle.DEFAULT_POP) setShadowLayer(10f, 0f, 0f, android.graphics.Color.BLACK)
                         }
                     )
                 }
@@ -251,37 +205,26 @@ fun GameBoard(
                 val end = scaledPoints.find { it.id == line.endId }
                 if (start != null && end != null) {
                     val lineColor = getPlayerColor(line.player)
-                    
-                    if (style == BoardStyle.NEON_NIGHT) {
-                        drawLine(color = lineColor.copy(alpha = 0.3f), start = start.position, end = end.position, strokeWidth = 20f, cap = StrokeCap.Round)
-                    }
-
-                    if (style == BoardStyle.FOUNDER_GOLD) {
-                        val borderColor = if (line.player == 1) Color(0xFFFFFACD) else Color(0xFF222222)
-                        drawLine(color = borderColor, start = start.position, end = end.position, strokeWidth = 10f, cap = StrokeCap.Round)
-                        drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 6f, cap = StrokeCap.Round)
-                    } else if (style == BoardStyle.RETRO_ARCADE) {
-                        drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 8f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
-                    } else if (style == BoardStyle.DEFAULT_POP) {
-                        // Linha Pop!: Glow suave ao redor
+                    if (style == BoardStyle.DEFAULT_POP) {
                         drawLine(color = lineColor.copy(alpha = 0.3f), start = start.position, end = end.position, strokeWidth = 12f, cap = StrokeCap.Round)
                         drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 7f, cap = StrokeCap.Round)
                     } else {
-                        drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = if (style == BoardStyle.PAPER_NOTEBOOK) 4f else 6f, cap = StrokeCap.Round)
+                        drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 6f, cap = StrokeCap.Round)
                     }
                 }
             }
 
-            // Drag Preview
+            // Drag Preview (FIX: Restored drag preview line)
             if (dragStartId != null && currentDragPosition != null && enabled) {
                 val startPoint = scaledPoints.find { it.id == dragStartId }
                 if (startPoint != null) {
                     val color = getPlayerColor(gameState.currentPlayer)
                     val isValidHover = hoveredPointId != null && gameState.isValidMove(dragStartId!!, hoveredPointId!!)
                     val lineEnd = if (hoveredPointId != null) scaledPoints.find { it.id == hoveredPointId }?.position ?: currentDragPosition!! else currentDragPosition!!
-
-                    if (style == BoardStyle.RETRO_ARCADE) {
-                        drawLine(color = if (hoveredPointId != null && !isValidHover) Color.Red else color.copy(alpha = 0.6f), start = startPoint.position, end = lineEnd, strokeWidth = 8f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
+                    
+                    if (style == BoardStyle.DEFAULT_POP) {
+                        drawLine(color = if (hoveredPointId != null && !isValidHover) Color.Red.copy(alpha = 0.5f) else color.copy(alpha = 0.4f), start = startPoint.position, end = lineEnd, strokeWidth = 10f, cap = StrokeCap.Round)
+                        drawLine(color = if (hoveredPointId != null && !isValidHover) Color.Red else color.copy(alpha = 0.6f), start = startPoint.position, end = lineEnd, strokeWidth = 6f, cap = StrokeCap.Round)
                     } else {
                         drawLine(color = if (hoveredPointId != null && !isValidHover) Color.Red else color.copy(alpha = 0.5f), start = startPoint.position, end = lineEnd, strokeWidth = 8f, cap = StrokeCap.Round)
                     }
@@ -292,34 +235,15 @@ fun GameBoard(
             scaledPoints.forEach { point ->
                 val isDragStart = point.id == dragStartId
                 val isHovered = point.id == hoveredPointId
-                val isInvalidMove = dragStartId != null && isHovered && !gameState.isValidMove(dragStartId!!, hoveredPointId!!)
                 val currentPlayerColor = getPlayerColor(gameState.currentPlayer)
+                val pointColor = if (isDragStart || isHovered) currentPlayerColor else pointBaseColor
 
-                val pointColor = when {
-                    isDragStart && enabled -> currentPlayerColor
-                    isHovered && dragStartId != null && enabled -> if (isInvalidMove) Color.Red else currentPlayerColor.copy(alpha = 0.8f)
-                    else -> pointBaseColor
-                }
-
-                if (style == BoardStyle.RETRO_ARCADE) {
-                    val size = if (isDragStart || isHovered) 24f else 16f
-                    drawRect(color = pointColor, topLeft = Offset(point.position.x - size/2, point.position.y - size/2), size = androidx.compose.ui.geometry.Size(size, size))
-                } else if (style == BoardStyle.DEFAULT_POP) {
-                    // Pontos no modo Pop: Perolados/3D
-                    if (isDragStart || isHovered) {
-                        drawCircle(brush = Brush.radialGradient(colors = listOf(pointColor.copy(alpha = 0.4f), Color.Transparent), center = point.position, radius = 45f), radius = 45f, center = point.position)
-                    }
+                if (style == BoardStyle.DEFAULT_POP) {
+                    if (isDragStart || isHovered) drawCircle(brush = Brush.radialGradient(colors = listOf(pointColor.copy(alpha = 0.4f), Color.Transparent), center = point.position, radius = 45f), radius = 45f, center = point.position)
                     drawCircle(color = pointColor, radius = if (isDragStart || isHovered) 16f else 11f, center = point.position)
-                    // Brilho interno 3D
                     drawCircle(color = Color.White.copy(alpha = 0.5f), radius = if (isDragStart || isHovered) 7f else 5f, center = Offset(point.position.x - 3f, point.position.y - 3f))
                 } else {
-                    if (style == BoardStyle.NEON_NIGHT && (isDragStart || isHovered)) {
-                        drawCircle(brush = Brush.radialGradient(colors = listOf(pointColor.copy(alpha = 0.5f), Color.Transparent), center = point.position, radius = 40f), radius = 40f, center = point.position)
-                    }
-                    drawCircle(color = pointColor, radius = if (isDragStart && enabled) 18f else if (isHovered && dragStartId != null && enabled) 16f else 12f, center = point.position)
-                    if (isDragStart || isHovered) {
-                        drawCircle(color = Color.White, radius = 8f, center = point.position)
-                    }
+                    drawCircle(color = pointColor, radius = if (isDragStart || isHovered) 18f else 12f, center = point.position)
                 }
             }
         }

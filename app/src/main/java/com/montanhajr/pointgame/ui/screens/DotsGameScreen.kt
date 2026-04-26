@@ -2,15 +2,25 @@ package com.montanhajr.pointgame.ui.screens
 
 import android.app.Activity
 import android.media.MediaPlayer
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.BuildConfig
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.BillingManager
@@ -66,6 +76,9 @@ fun DotsGameScreen(
     var currentPowerUp by remember { mutableStateOf(PowerUpType.UNDO) }
     var inventoryPowerUp by remember { mutableStateOf<PowerUpType?>(null) }
     
+    // Debug states
+    var showDebugMenu by remember { mutableStateOf(false) }
+    
     // Nova flag para evitar sobreposição durante a propaganda
     var isAdWatching by remember { mutableStateOf(false) }
     
@@ -113,7 +126,6 @@ fun DotsGameScreen(
                 
                 delay(nextAttemptDelay)
                 
-                // Só tenta mostrar se o inventário estiver vazio, se não houver FAB ativo e se não estivermos vendo AD
                 if (inventoryPowerUp == null && !showRewardFab && !isAdWatching && !gameState.gameOver && AdManager.isNetworkAvailable(context)) {
                     val spawnChance = if (isDebug) 0.9f else 0.6f
                     if (Random.nextFloat() < spawnChance) {
@@ -182,8 +194,21 @@ fun DotsGameScreen(
         scrollState.animateScrollTo(targetScroll.coerceAtLeast(0))
     }
 
-    LaunchedEffect(gameState.currentPlayer, gameState.gameOver, gameState.lines.size) {
+    LaunchedEffect(gameState.currentPlayer, gameState.gameOver, gameState.lines.size, gameState.protectionShieldTurns) {
         if (gameMode == GameMode.VS_CPU && gameState.currentPlayer == 2 && !gameState.gameOver) {
+            // Lógica especial de Shield ativo para a CPU
+            if (gameState.protectionShieldTurns > 0) {
+                val allMoves = gameState.getAllValidMoves()
+                val onlyTriangleMoves = allMoves.all { gameState.moveCompletesTriangle(it) }
+                
+                if (onlyTriangleMoves && allMoves.isNotEmpty()) {
+                    delay(1000)
+                    Toast.makeText(context, "Escudo ativo, nenhuma jogada disponível para a CPU", Toast.LENGTH_LONG).show()
+                    gameState = gameState.skipCpuTurnDueToShield()
+                    return@LaunchedEffect
+                }
+            }
+
             delay(800)
             val cpuMove = gameState.getCpuMove()
             if (cpuMove != null) {
@@ -250,10 +275,17 @@ fun DotsGameScreen(
     fun activatePowerUp(type: PowerUpType) {
         when (type) {
             PowerUpType.UNDO -> handleUndo()
-            PowerUpType.EAGLE_EYE -> scope.launch {
-                showEagleEye = true
-                delay(3000)
-                showEagleEye = false
+            PowerUpType.EAGLE_EYE -> {
+                val completable = gameState.getAllCompletableLines()
+                if (completable.isEmpty()) {
+                    Toast.makeText(context, "Nenhum triângulo pronto para fechar!", Toast.LENGTH_SHORT).show()
+                } else {
+                    scope.launch {
+                        showEagleEye = true
+                        delay(3000)
+                        showEagleEye = false
+                    }
+                }
             }
             PowerUpType.XRAY_VISION -> scope.launch {
                 showXRay = true
@@ -344,6 +376,34 @@ fun DotsGameScreen(
                     powerUpType = inventoryPowerUp,
                     onActivate = { inventoryPowerUp?.let { activatePowerUp(it) } }
                 )
+                
+                // Botão de Debug de Power-ups (Apenas em Debug)
+                if (BuildConfig.DEBUG) {
+                    Box(modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
+                        IconButton(
+                            onClick = { showDebugMenu = !showDebugMenu },
+                            modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                        ) {
+                            Icon(Icons.Default.BugReport, contentDescription = "Debug", tint = Color.Green)
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showDebugMenu,
+                            onDismissRequest = { showDebugMenu = false }
+                        ) {
+                            PowerUpType.entries.forEach { powerUp ->
+                                DropdownMenuItem(
+                                    text = { Text(powerUp.displayName) },
+                                    onClick = {
+                                        inventoryPowerUp = powerUp
+                                        showDebugMenu = false
+                                        Toast.makeText(context, "Debug: ${powerUp.displayName} adicionado!", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
             AdBanner(onPremiumClick = { showPremiumDialog = true })
         }
