@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.montanhajr.pointgame.BuildConfig
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.BillingManager
 import com.montanhajr.pointgame.logic.CareerManager
@@ -28,7 +29,7 @@ fun DotsGameScreen(
     difficulty: Difficulty?,
     numPlayers: Int,
     playerNames: List<String>? = null,
-    boardStyle: BoardStyle = BoardStyle.GALAXY,
+    boardStyle: BoardStyle = BoardStyle.DEFAULT_POP,
     careerLevel: Int? = null,
     onBackToMenu: () -> Unit
 ) {
@@ -65,6 +66,9 @@ fun DotsGameScreen(
     var currentPowerUp by remember { mutableStateOf(PowerUpType.UNDO) }
     var inventoryPowerUp by remember { mutableStateOf<PowerUpType?>(null) }
     
+    // Nova flag para evitar sobreposição durante a propaganda
+    var isAdWatching by remember { mutableStateOf(false) }
+    
     var showEagleEye by remember { mutableStateOf(false) }
     var showXRay by remember { mutableStateOf(false) }
     var isEraserActive by remember { mutableStateOf(false) }
@@ -81,7 +85,7 @@ fun DotsGameScreen(
     val playerPointSound = remember { MediaPlayer.create(context, R.raw.player_point) }
     val cpuPointSound = remember { MediaPlayer.create(context, R.raw.cpu_point) }
 
-    val uiColors = remember(boardStyle) { getStyleUiColors(boardStyle) }
+    val uiColors = remember(gameState.boardStyle) { getStyleUiColors(gameState.boardStyle) }
 
     LaunchedEffect(Unit) {
         AdManager.loadInterstitial(context)
@@ -99,18 +103,20 @@ fun DotsGameScreen(
         }
     }
 
-    // Lógica de aparecimento aleatório do FAB independente de movimentos
     LaunchedEffect(gameState.gameOver) {
         if (!gameState.gameOver) {
+            val isDebug = BuildConfig.DEBUG
             while (true) {
-                // Espera um tempo aleatório entre 15 e 45 segundos para tentar mostrar o FAB
-                val nextAttemptDelay = (15000L..45000L).random()
+                val minDelay = if (isDebug) 5000L else 15000L
+                val maxDelay = if (isDebug) 10000L else 45000L
+                val nextAttemptDelay = (minDelay..maxDelay).random()
+                
                 delay(nextAttemptDelay)
                 
-                // Só mostra se o inventário estiver vazio, se o FAB não estiver visível e se o jogo não acabou
-                if (inventoryPowerUp == null && !showRewardFab && !gameState.gameOver) {
-                    // Chance de 60% de aparecer após o delay
-                    if (Random.nextFloat() < 0.6f) {
+                // Só tenta mostrar se o inventário estiver vazio, se não houver FAB ativo e se não estivermos vendo AD
+                if (inventoryPowerUp == null && !showRewardFab && !isAdWatching && !gameState.gameOver && AdManager.isNetworkAvailable(context)) {
+                    val spawnChance = if (isDebug) 0.9f else 0.6f
+                    if (Random.nextFloat() < spawnChance) {
                         currentPowerUp = PowerUpType.entries.toTypedArray().random()
                         showRewardFab = true
                         rewardCountdown = 10
@@ -211,6 +217,7 @@ fun DotsGameScreen(
         isEraserActive = false
         showRewardFab = false
         inventoryPowerUp = null
+        isAdWatching = false
     }
 
     fun goToNextLevel() {
@@ -230,6 +237,7 @@ fun DotsGameScreen(
         statsManager.setAdPending(false)
         showRewardFab = false
         inventoryPowerUp = null
+        isAdWatching = false
     }
 
     fun handleUndo() {
@@ -271,7 +279,7 @@ fun DotsGameScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        BoardBackground(style = boardStyle)
+        BoardBackground(style = gameState.boardStyle)
         Column(modifier = Modifier.fillMaxSize()) {
             GameHeader(
                 gameState = gameState,
@@ -317,10 +325,16 @@ fun DotsGameScreen(
                         val activity = context as? Activity
                         if (activity != null) {
                             showRewardFab = false
+                            isAdWatching = true // Marcamos que o usuário entrou na propaganda
                             AdManager.showRewardedAd(
                                 activity = activity,
-                                onRewardEarned = { inventoryPowerUp = type },
-                                onAdFailed = { inventoryPowerUp = type }
+                                onRewardEarned = { 
+                                    inventoryPowerUp = type
+                                    isAdWatching = false // Propaganda concluída com sucesso
+                                },
+                                onAdFailed = { 
+                                    isAdWatching = false // Permite novo sorteio se o ad falhar
+                                }
                             )
                         }
                     }

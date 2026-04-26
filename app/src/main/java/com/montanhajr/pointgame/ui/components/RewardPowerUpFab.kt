@@ -1,6 +1,9 @@
 package com.montanhajr.pointgame.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -10,7 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,14 +24,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.montanhajr.pointgame.models.PowerUpType
+import com.montanhajr.pointgame.ui.theme.*
 
 @Composable
 fun RewardPowerUpFab(
     visible: Boolean,
-    countdown: Int,
+    countdown: Int, // Mantemos para consistência de lógica, mas a animação será independente
     powerUpType: PowerUpType,
     onActivate: (PowerUpType) -> Unit
 ) {
+    // Animatable permite um controle de progresso 100% contínuo (float)
+    val progress = remember { Animatable(1f) }
+
+    // Disparamos a animação visual sempre que o FAB se torna visível
+    LaunchedEffect(visible) {
+        if (visible) {
+            progress.snapTo(1f) // Reseta para 100%
+            progress.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(
+                    durationMillis = 10000, // 10 segundos totais
+                    easing = LinearEasing // Movimento constante e suave
+                )
+            )
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -42,12 +63,13 @@ fun RewardPowerUpFab(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(contentAlignment = Alignment.Center) {
+                    // O indicador agora usa o valor do progress.value que atualiza a cada frame (60fps)
                     CircularProgressIndicator(
-                        progress = { countdown / 10f },
+                        progress = { progress.value },
                         modifier = Modifier.size(64.dp),
-                        color = Color(0xFF00FFFF),
+                        color = PopCyan,
                         strokeWidth = 4.dp,
-                        trackColor = Color.White.copy(alpha = 0.1f)
+                        trackColor = PopWhite.copy(alpha = 0.1f)
                     )
                     
                     Surface(
@@ -56,7 +78,7 @@ fun RewardPowerUpFab(
                             .clip(CircleShape)
                             .clickable { onActivate(powerUpType) },
                         shape = CircleShape,
-                        color = Color(0xFF00FFFF),
+                        color = PopCyan,
                         tonalElevation = 6.dp
                     ) {
                         Image(
@@ -69,9 +91,9 @@ fun RewardPowerUpFab(
                 }
                 Text(
                     text = powerUpType.displayName,
-                    color = Color(0xFF00FFFF),
+                    color = PopCyan,
                     fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
@@ -102,9 +124,9 @@ fun InventoryPowerUpButton(
                         .clip(CircleShape)
                         .clickable { onActivate() },
                     shape = CircleShape,
-                    color = Color(0xFF00FFFF),
+                    color = PopCyan,
                     tonalElevation = 8.dp,
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.5f))
+                    border = androidx.compose.foundation.BorderStroke(2.dp, PopWhite.copy(alpha = 0.5f))
                 ) {
                     powerUpType?.let {
                         Image(
@@ -117,9 +139,9 @@ fun InventoryPowerUpButton(
                 }
                 Text(
                     text = "USAR",
-                    color = Color(0xFF00FFFF),
+                    color = PopCyan,
                     fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
