@@ -21,10 +21,10 @@ class StatisticsManager(private val context: Context) {
         prefs.edit().putInt("total_triangles", current + count).apply()
     }
 
-    fun recordMatch(difficulty: Difficulty?, result: MatchResult, timeMs: Long): String? {
+    fun recordMatch(difficulty: Difficulty?, result: MatchResult, timeMs: Long, isTraining: Boolean = true): String? {
         val editor = prefs.edit()
         
-        if (difficulty != null) {
+        if (difficulty != null && isTraining) {
             val key = when (result) {
                 MatchResult.WIN -> "wins_${difficulty.name.lowercase()}"
                 MatchResult.LOSS -> "losses_${difficulty.name.lowercase()}"

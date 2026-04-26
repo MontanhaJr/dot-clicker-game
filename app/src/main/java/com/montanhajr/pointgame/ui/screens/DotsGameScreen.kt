@@ -176,9 +176,14 @@ fun DotsGameScreen(
                     }
                 }
                 
-                statsManager.recordMatch(gameState.difficulty, result, duration)
+                statsManager.recordMatch(
+                    difficulty = gameState.difficulty,
+                    result = result,
+                    timeMs = duration,
+                    isTraining = gameState.careerLevel == null
+                )
             } else {
-                statsManager.recordMatch(null, StatisticsManager.MatchResult.DRAW, duration)
+                statsManager.recordMatch(null, StatisticsManager.MatchResult.DRAW, duration, isTraining = false)
             }
             
             if (newlyUnlocked != null) {

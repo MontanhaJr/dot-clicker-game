@@ -123,14 +123,22 @@ fun StatsScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Difficulty Grid
-                Text(
-                    "TAXA DE VITÓRIA (VS CPU)",
-                    color = PopWhite,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        "TAXA DE VITÓRIA VS CPU",
+                        color = PopWhite,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Start
+                    )
+                    Text(
+                        "(SOMENTE MODO TREINAMENTO)",
+                        color = PopWhite.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Start
+                    )
+                }
                 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     PopWinRateCard(modifier = Modifier.weight(1f), label = "FÁCIL", rate = stats.easyStats.winRate, color = PopGreen)
