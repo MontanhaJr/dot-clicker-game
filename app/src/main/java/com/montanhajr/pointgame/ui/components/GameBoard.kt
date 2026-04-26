@@ -20,6 +20,7 @@ import com.montanhajr.pointgame.models.DotPoint
 import com.montanhajr.pointgame.models.Line
 import com.montanhajr.pointgame.models.getStylePlayerColor
 import com.montanhajr.pointgame.models.getStyleUiColors
+import com.montanhajr.pointgame.ui.theme.PopWhite
 import kotlin.math.sqrt
 
 @Composable
@@ -42,6 +43,7 @@ fun GameBoard(
     val uiColors = remember(style) { getStyleUiColors(style) }
 
     val pointBaseColor = when (style) {
+        BoardStyle.DEFAULT_POP -> Color.White
         BoardStyle.MINIMALIST_WHITE -> Color(0xFF333333)
         BoardStyle.PAPER_NOTEBOOK -> Color(0xFF333333)
         BoardStyle.RETRO_ARCADE -> Color(0xFF00FF00)
@@ -129,7 +131,7 @@ fun GameBoard(
                     }
                 }
         ) {
-            // X-Ray Vision: Show all possible connections
+            // X-Ray Vision
             if (showXRay) {
                 gameState.getAllPossibleConnections().forEach { (sId, eId) ->
                     val start = scaledPoints.find { it.id == sId }?.position ?: return@forEach
@@ -144,7 +146,7 @@ fun GameBoard(
                 }
             }
 
-            // Eagle Eye: Highlight completable triangles
+            // Eagle Eye
             if (showEagleEye) {
                 gameState.getAllCompletableLines().forEach { (sId, eId) ->
                     val start = scaledPoints.find { it.id == sId }?.position ?: return@forEach
@@ -167,26 +169,77 @@ fun GameBoard(
 
                 if (p1 != null && p2 != null && p3 != null) {
                     val color = getPlayerColor(triangle.owner)
-                    val triangleColor = color.copy(alpha = 0.15f)
                     val path = Path().apply {
                         moveTo(p1.position.x, p1.position.y)
                         lineTo(p2.position.x, p2.position.y)
                         lineTo(p3.position.x, p3.position.y)
                         close()
                     }
-                    drawPath(path = path, color = triangleColor)
+                    
+                    if (style == BoardStyle.DEFAULT_POP) {
+                        // NOVO DESIGN POP!: Sólido com textura brilhante
+                        // Cor base + sobreposição branca para clarear
+                        drawPath(path = path, color = color)
+                        drawPath(path = path, color = Color.White.copy(alpha = 0.2f))
+                        
+                        // Efeito de faceta/cristal (brilho geométrico) - mais suave
+                        val cX = (p1.position.x + p2.position.x + p3.position.x) / 3
+                        val cY = (p1.position.y + p2.position.y + p3.position.y) / 3
+                        
+                        // Parte superior do cristal - reduzida opacidade
+                        val facetPath = Path().apply {
+                            moveTo(p1.position.x, p1.position.y)
+                            lineTo(p2.position.x, p2.position.y)
+                            lineTo(cX, cY)
+                            close()
+                        }
+                        drawPath(path = facetPath, color = Color.White.copy(alpha = 0.15f))
+                        
+                        // Brilho radial central - MUITO mais suave e espalhado
+                        drawPath(
+                            path = path,
+                            brush = Brush.radialGradient(
+                                colors = listOf(Color.White.copy(alpha = 0.2f), Color.Transparent),
+                                center = Offset(cX, cY),
+                                radius = 200f // Raio aumentado para suavizar
+                            )
+                        )
+                        
+                        // Pequenas partículas de brilho (Sparkles)
+                        val rand = java.util.Random((triangle.p1Id + triangle.p2Id + triangle.p3Id).toLong())
+                        repeat(4) {
+                            val r1 = rand.nextFloat(); val r2 = rand.nextFloat() * (1f - r1); val r3 = 1f - r1 - r2
+                            val px = r1 * p1.position.x + r2 * p2.position.x + r3 * p3.position.x
+                            val py = r1 * p1.position.y + r2 * p2.position.y + r3 * p3.position.y
+                            drawCircle(
+                                color = Color.White.copy(alpha = 0.4f),
+                                radius = rand.nextFloat() * 2f + 1f,
+                                center = Offset(px, py)
+                            )
+                        }
+                    } else {
+                        // Design clássico translúcido para outros estilos
+                        drawPath(path = path, color = color.copy(alpha = 0.15f))
+                    }
 
                     val centerX = (p1.position.x + p2.position.x + p3.position.x) / 3
                     val centerY = (p1.position.y + p2.position.y + p3.position.y) / 3
                     val letter = getPlayerInitial(triangle.owner)
 
                     drawContext.canvas.nativeCanvas.drawText(
-                        letter, centerX, centerY + 20,
+                        letter, centerX, centerY + 15,
                         android.graphics.Paint().apply {
-                            this.color = android.graphics.Color.argb((color.alpha * 255).toInt(), (color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt())
-                            textSize = 50f
+                            this.color = if (style == BoardStyle.DEFAULT_POP) {
+                                android.graphics.Color.WHITE
+                            } else {
+                                android.graphics.Color.argb((color.alpha * 255).toInt(), (color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt())
+                            }
+                            textSize = 45f
                             textAlign = android.graphics.Paint.Align.CENTER
                             isFakeBoldText = true
+                            if (style == BoardStyle.DEFAULT_POP) {
+                                setShadowLayer(10f, 0f, 0f, android.graphics.Color.BLACK)
+                            }
                         }
                     )
                 }
@@ -209,6 +262,10 @@ fun GameBoard(
                         drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 6f, cap = StrokeCap.Round)
                     } else if (style == BoardStyle.RETRO_ARCADE) {
                         drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 8f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
+                    } else if (style == BoardStyle.DEFAULT_POP) {
+                        // Linha Pop!: Glow suave ao redor
+                        drawLine(color = lineColor.copy(alpha = 0.3f), start = start.position, end = end.position, strokeWidth = 12f, cap = StrokeCap.Round)
+                        drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = 7f, cap = StrokeCap.Round)
                     } else {
                         drawLine(color = lineColor, start = start.position, end = end.position, strokeWidth = if (style == BoardStyle.PAPER_NOTEBOOK) 4f else 6f, cap = StrokeCap.Round)
                     }
@@ -247,6 +304,14 @@ fun GameBoard(
                 if (style == BoardStyle.RETRO_ARCADE) {
                     val size = if (isDragStart || isHovered) 24f else 16f
                     drawRect(color = pointColor, topLeft = Offset(point.position.x - size/2, point.position.y - size/2), size = androidx.compose.ui.geometry.Size(size, size))
+                } else if (style == BoardStyle.DEFAULT_POP) {
+                    // Pontos no modo Pop: Perolados/3D
+                    if (isDragStart || isHovered) {
+                        drawCircle(brush = Brush.radialGradient(colors = listOf(pointColor.copy(alpha = 0.4f), Color.Transparent), center = point.position, radius = 45f), radius = 45f, center = point.position)
+                    }
+                    drawCircle(color = pointColor, radius = if (isDragStart || isHovered) 16f else 11f, center = point.position)
+                    // Brilho interno 3D
+                    drawCircle(color = Color.White.copy(alpha = 0.5f), radius = if (isDragStart || isHovered) 7f else 5f, center = Offset(point.position.x - 3f, point.position.y - 3f))
                 } else {
                     if (style == BoardStyle.NEON_NIGHT && (isDragStart || isHovered)) {
                         drawCircle(brush = Brush.radialGradient(colors = listOf(pointColor.copy(alpha = 0.5f), Color.Transparent), center = point.position, radius = 40f), radius = 40f, center = point.position)
