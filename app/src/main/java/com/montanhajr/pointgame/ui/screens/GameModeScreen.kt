@@ -59,11 +59,11 @@ fun GameModeScreen() {
     var careerLevel by remember { mutableStateOf<Int?>(null) }
     
     var selectedBoardStyle by remember { 
-        val savedStyleName = prefs.getString("last_board_style", BoardStyle.GALAXY.name)
+        val savedStyleName = prefs.getString("last_board_style", BoardStyle.DEFAULT_POP.name)
         mutableStateOf(try {
-            BoardStyle.valueOf(savedStyleName ?: BoardStyle.GALAXY.name)
+            BoardStyle.valueOf(savedStyleName ?: BoardStyle.DEFAULT_POP.name)
         } catch (e: Exception) {
-            BoardStyle.GALAXY
+            BoardStyle.DEFAULT_POP
         })
     }
     

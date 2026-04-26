@@ -16,7 +16,7 @@ data class GameState(
     val gameOver: Boolean = false,
     val isCpuGame: Boolean = false,
     val difficulty: Difficulty = Difficulty.MEDIUM,
-    val boardStyle: BoardStyle = BoardStyle.GALAXY,
+    val boardStyle: BoardStyle = BoardStyle.DEFAULT_POP,
     val careerLevel: Int? = null,
     
     // Power-up states
@@ -32,7 +32,7 @@ data class GameState(
             difficulty: Difficulty = Difficulty.MEDIUM,
             numPlayers: Int = 2,
             playerNames: List<String>? = null,
-            boardStyle: BoardStyle = BoardStyle.GALAXY,
+            boardStyle: BoardStyle = BoardStyle.DEFAULT_POP,
             numPointsParam: Int? = null,
             careerLevel: Int? = null
         ): GameState {
@@ -301,7 +301,7 @@ data class GameState(
             if (c == a || c == b) continue
             
             val hasAC = allLines.any { (it.startId == a && it.endId == c) || (it.startId == c && it.endId == a) }
-            val hasBC = allLines.any { (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
+            val hasBC = allLines.any { (it.startId == b && it.endId == c) || (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
             
             if (hasAC && hasBC) {
                 if (!hasAnyPointInside(a, b, c) && !hasLinesCrossing(a, b, c, allLines)) {
