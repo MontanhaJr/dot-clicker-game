@@ -2,8 +2,11 @@ package com.montanhajr.pointgame.ui.components
 
 import android.app.Activity
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,7 +18,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -25,7 +31,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.GameState
+import com.montanhajr.pointgame.models.PowerUpType
 import com.montanhajr.pointgame.ui.theme.*
+import androidx.compose.foundation.border
 
 @Composable
 fun GameDialogManager(
@@ -345,38 +353,124 @@ fun AchievementUnlockedDialog(achievementName: String, onDismiss: () -> Unit) {
 
 @Composable
 fun RulesDialog(onDismiss: () -> Unit) {
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        containerColor = PopDeepBlue,
-        titleContentColor = PopWhite,
-        textContentColor = Color.LightGray,
-        shape = RoundedCornerShape(28.dp),
-        title = { Text(text = stringResource(R.string.rules).uppercase(), fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = PopCyan) },
-        text = { 
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) { 
-                PopRuleItem(title = stringResource(R.string.objective_title), description = stringResource(R.string.objective_desc))
-                Spacer(modifier = Modifier.height(12.dp))
-                PopRuleItem(title = stringResource(R.string.turns_title), description = stringResource(R.string.turns_desc))
-                Spacer(modifier = Modifier.height(12.dp))
-                PopRuleItem(title = stringResource(R.string.prohibited_title), description = stringResource(R.string.prohibited_desc)) 
-            } 
-        },
-        confirmButton = { 
-            Button(
-                onClick = onDismiss, 
-                colors = ButtonDefaults.buttonColors(containerColor = PopBlue),
-                shape = RoundedCornerShape(12.dp)
-            ) { 
-                Text(stringResource(R.string.understood).uppercase(), fontWeight = FontWeight.ExtraBold) 
-            } 
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.85f),
+            shape = RoundedCornerShape(32.dp),
+            color = PopDeepBlue,
+            border = BorderStroke(2.dp, PopCyan.copy(alpha = 0.2f))
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Título
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.rules).uppercase(),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 24.sp,
+                        color = PopCyan
+                    )
+                }
+
+                // Conteúdo com Scroll
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp)
+                ) {
+                    // Regras Básicas
+                    Text("REGRAS BÁSICAS", fontWeight = FontWeight.ExtraBold, color = PopWhite, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    RuleItem(title = stringResource(R.string.objective_title), description = stringResource(R.string.objective_desc))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    RuleItem(title = stringResource(R.string.turns_title), description = stringResource(R.string.turns_desc))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    RuleItem(title = stringResource(R.string.prohibited_title), description = stringResource(R.string.prohibited_desc))
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Divider(color = PopWhite.copy(alpha = 0.1f))
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Power-ups
+                    Text("POWER-UPS ESPECIAIS", fontWeight = FontWeight.ExtraBold, color = PopYellow, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    PowerUpType.entries.forEach { powerUp ->
+                        PowerUpRuleItem(powerUp)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
+                // Botão Fechar
+                Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PopBlue),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(stringResource(R.string.understood).uppercase(), fontWeight = FontWeight.ExtraBold)
+                    }
+                }
+            }
         }
-    )
+    }
 }
 
 @Composable
-private fun PopRuleItem(title: String, description: String) {
+fun RuleItem(title: String, description: String) {
     Column {
-        Text(text = title.uppercase(), fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = PopYellow)
-        Text(text = description, fontSize = 13.sp, color = PopWhite.copy(alpha = 0.7f))
+        Text(text = title.uppercase(), fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = PopCyan)
+        Text(text = description, fontSize = 12.sp, color = PopWhite.copy(alpha = 0.7f))
+    }
+}
+
+@Composable
+fun PowerUpRuleItem(type: PowerUpType) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Ícone Circular do Power-up
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(Color.Black)
+                .border(2.dp, PopCyan, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = type.iconRes),
+                contentDescription = type.displayName,
+                modifier = Modifier.size(32.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        Column {
+            Text(
+                text = type.displayName.uppercase(), 
+                fontWeight = FontWeight.ExtraBold, 
+                fontSize = 14.sp, 
+                color = PopCyan
+            )
+            Text(
+                text = type.description, 
+                fontSize = 12.sp, 
+                color = PopWhite.copy(alpha = 0.7f),
+                lineHeight = 16.sp
+            )
+        }
     }
 }
