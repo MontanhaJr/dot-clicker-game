@@ -2,8 +2,10 @@
     <string name="app_name">DotPop!</string>
     <string name="game_title">RELIER LES POINTS !</string>
     <string name="choose_game_mode">Choisir le mode de jeu</string>
+    <string name="journey_mode">🏆 Mode Voyage</string>
     <string name="two_players">👥 2 Joueurs</string>
     <string name="multiplayer">👨‍👩‍👧‍👦 Multijoueur (3-10)</string>
+    <string name="training_mode">🤖 Mode Entraînement</string>
     <string name="vs_cpu">🤖 Vs CPU</string>
     <string name="menu">Menu</string>
     <string name="rules">Règles</string>
@@ -19,6 +21,7 @@
     <string name="restart_desc">Voulez-vous vraiment recommencer ? Toute la progression actuelle sera perdue.</string>
     <string name="restart_confirm">Recommencer</string>
     <string name="cancel">Annuler</string>
+    <string name="close">Fermer</string>
     <string name="how_many_players">Combien de joueurs ?</string>
     <string name="player_names">Noms des Joueurs</string>
     <string name="num_players">%d Joueurs</string>
@@ -49,4 +52,20 @@
     <string name="achievements_empty_completed">Continuez à jouer pour débloquer !</string>
     <string name="achievement_founder_title">Fondateur</string>
     <string name="achievement_founder_desc">Jouez 10 parties pendant l\'année de lancement (jusqu\'à fin 2026) pour débloquer le style Founder Gold.</string>
+    <string name="career_title">Voyage</string>
+    <string name="level_label">Niveau %d</string>
+
+    <!-- Stats Strings -->
+    <string name="stats_title">STATISTIQUES</string>
+    <string name="global_performance">PERFORMANCE GLOBALE</string>
+    <string name="triangles_formed">TRIANGLES FORMÉS</string>
+    <string name="avg_time_per_match">TEMPS MOYEN PAR MATCH</string>
+    <string name="win_rate_vs_cpu">TAUX DE VICTOIRE VS IA</string>
+    <string name="training_only_label">(MODE ENTRAÎNEMENT UNIQUEMENT)</string>
+    <string name="difficulty_easy">FACILE</string>
+    <string name="difficulty_medium">MOYEN</string>
+    <string name="difficulty_hard">DIFFICILE</string>
+
+    <!-- Career Strings -->
+    <string name="current_level_label">ACTUEL</string>
 </resources>

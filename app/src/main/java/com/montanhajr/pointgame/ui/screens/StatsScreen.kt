@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,7 +54,7 @@ fun StatsScreen(onBack: () -> Unit) {
                 TopAppBar(
                     title = { 
                         Text(
-                            "ESTATÍSTICAS", 
+                            stringResource(R.string.stats_title), 
                             color = PopWhite, 
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 20.sp
@@ -61,12 +62,12 @@ fun StatsScreen(onBack: () -> Unit) {
                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PopWhite)
+                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back), tint = PopWhite)
                         }
                     },
                     actions = {
                         IconButton(onClick = { showAchievementDialog = true }) {
-                            Icon(Icons.Default.EmojiEvents, contentDescription = "Achievements", tint = PopYellow)
+                            Icon(Icons.Default.EmojiEvents, contentDescription = stringResource(R.string.achievements_title), tint = PopYellow)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -84,7 +85,7 @@ fun StatsScreen(onBack: () -> Unit) {
             ) {
                 // Card de Triângulos Totais (Destaque Principal)
                 PopStatsCard(
-                    title = "DESEMPENHO GLOBAL",
+                    title = stringResource(R.string.global_performance),
                     content = {
                         Text(
                             text = "${stats.totalTriangles}",
@@ -95,7 +96,7 @@ fun StatsScreen(onBack: () -> Unit) {
                             lineHeight = 64.sp
                         )
                         Text(
-                            text = "TRIÂNGULOS FORMADOS", 
+                            text = stringResource(R.string.triangles_formed), 
                             color = PopWhite.copy(alpha = 0.7f),
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp,
@@ -106,7 +107,7 @@ fun StatsScreen(onBack: () -> Unit) {
 
                 // Row para tempo médio
                 PopStatsCard(
-                    title = "TEMPO MÉDIO POR PARTIDA",
+                    title = stringResource(R.string.avg_time_per_match),
                     content = {
                         val minutes = (stats.avgTimeMs / 1000) / 60
                         val seconds = (stats.avgTimeMs / 1000) % 60
@@ -125,14 +126,14 @@ fun StatsScreen(onBack: () -> Unit) {
                 // Difficulty Grid
                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        "TAXA DE VITÓRIA VS CPU",
+                        stringResource(R.string.win_rate_vs_cpu),
                         color = PopWhite,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Start
                     )
                     Text(
-                        "(SOMENTE MODO TREINAMENTO)",
+                        stringResource(R.string.training_only_label),
                         color = PopWhite.copy(alpha = 0.6f),
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp,
@@ -141,9 +142,9 @@ fun StatsScreen(onBack: () -> Unit) {
                 }
                 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PopWinRateCard(modifier = Modifier.weight(1f), label = "FÁCIL", rate = stats.easyStats.winRate, color = PopGreen)
-                    PopWinRateCard(modifier = Modifier.weight(1f), label = "MÉDIO", rate = stats.mediumStats.winRate, color = PopYellow)
-                    PopWinRateCard(modifier = Modifier.weight(1f), label = "DIFÍCIL", rate = stats.hardStats.winRate, color = PopRed)
+                    PopWinRateCard(modifier = Modifier.weight(1f), label = stringResource(R.string.difficulty_easy), rate = stats.easyStats.winRate, color = PopGreen)
+                    PopWinRateCard(modifier = Modifier.weight(1f), label = stringResource(R.string.difficulty_medium), rate = stats.mediumStats.winRate, color = PopYellow)
+                    PopWinRateCard(modifier = Modifier.weight(1f), label = stringResource(R.string.difficulty_hard), rate = stats.hardStats.winRate, color = PopRed)
                 }
                 
                 Spacer(modifier = Modifier.height(32.dp))

@@ -64,7 +64,7 @@ fun CareerScreen(onLevelSelected: (Int) -> Unit, onBack: () -> Unit) {
                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PopWhite)
+                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back), tint = PopWhite)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -152,7 +152,7 @@ fun PopLevelNode(level: Int, isUnlocked: Boolean, isCurrent: Boolean, onClick: (
         
         if (isCurrent) {
             Text(
-                text = "ATUAL",
+                text = stringResource(R.string.current_level_label),
                 color = PopYellow,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.ExtraBold,

@@ -2,8 +2,10 @@
     <string name="app_name">DotPop!</string>
     <string name="game_title">CONECTE OS PONTOS!</string>
     <string name="choose_game_mode">Escolha o modo de jogo</string>
+    <string name="journey_mode">🏆 Modo Jornada</string>
     <string name="two_players">👥 2 Jogadores</string>
     <string name="multiplayer">👨‍👩‍👧‍👦 Multijogadores (3-10)</string>
+    <string name="training_mode">🤖 Modo Treino</string>
     <string name="vs_cpu">🤖 Jogar vs CPU</string>
     <string name="menu">Menu</string>
     <string name="rules">Regras</string>
@@ -50,4 +52,20 @@
     <string name="achievements_empty_completed">Continue jogando para desbloquear!</string>
     <string name="achievement_founder_title">Fundador</string>
     <string name="achievement_founder_desc">Jogue 10 partidas durante o ano de lançamento (até o final de 2026) para desbloquear o estilo Founder Gold.</string>
+    <string name="career_title">Jornada</string>
+    <string name="level_label">Nível %d</string>
+
+    <!-- Stats Strings -->
+    <string name="stats_title">ESTATÍSTICAS</string>
+    <string name="global_performance">DESEMPENHO GLOBAL</string>
+    <string name="triangles_formed">TRIÂNGULOS FORMADOS</string>
+    <string name="avg_time_per_match">TEMPO MÉDIO POR PARTIDA</string>
+    <string name="win_rate_vs_cpu">TAXA DE VITÓRIA VS CPU</string>
+    <string name="training_only_label">(SOMENTE MODO TREINAMENTO)</string>
+    <string name="difficulty_easy">FÁCIL</string>
+    <string name="difficulty_medium">MÉDIO</string>
+    <string name="difficulty_hard">DIFÍCIL</string>
+
+    <!-- Career Strings -->
+    <string name="current_level_label">ATUAL</string>
 </resources>

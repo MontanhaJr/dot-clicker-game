@@ -2,8 +2,10 @@
     <string name="app_name">DotPop!</string>
     <string name="game_title">PUNKTE VERBINDEN!</string>
     <string name="choose_game_mode">Spielmodus wählen</string>
+    <string name="journey_mode">🏆 Reise-Modus</string>
     <string name="two_players">👥 2 Spieler</string>
     <string name="multiplayer">👨‍👩‍👧‍👦 Mehrspieler (3-10)</string>
+    <string name="training_mode">🤖 Trainingsmodus</string>
     <string name="vs_cpu">🤖 Vs CPU</string>
     <string name="menu">Menü</string>
     <string name="rules">Regeln</string>
@@ -19,6 +21,7 @@
     <string name="restart_desc">Möchten Sie das Spiel wirklich neu starten? Der aktuelle Fortschritt geht verloren.</string>
     <string name="restart_confirm">Neustart</string>
     <string name="cancel">Abbrechen</string>
+    <string name="close">Schließen</string>
     <string name="how_many_players">Wie viele Spieler?</string>
     <string name="player_names">Spielernamen</string>
     <string name="num_players">%d Spieler</string>
@@ -49,4 +52,20 @@
     <string name="achievements_empty_completed">Spielen Sie weiter, um sie freizuschalten!</string>
     <string name="achievement_founder_title">Gründer</string>
     <string name="achievement_founder_desc">Spielen Sie im Jahr der Veröffentlichung (bis Ende 2026) 10 Spiele, um den Founder Gold-Stil freizuschalten.</string>
+    <string name="career_title">Reise</string>
+    <string name="level_label">Level %d</string>
+
+    <!-- Stats Strings -->
+    <string name="stats_title">STATISTIKEN</string>
+    <string name="global_performance">GLOBALE LEISTUNG</string>
+    <string name="triangles_formed">GEFORMTE DREIECKE</string>
+    <string name="avg_time_per_match">DURCHSCHN. ZEIT PRO SPIEL</string>
+    <string name="win_rate_vs_cpu">WINRATE GEGEN CPU</string>
+    <string name="training_only_label">(NUR TRAININGSMODUS)</string>
+    <string name="difficulty_easy">EINFACH</string>
+    <string name="difficulty_medium">MITTEL</string>
+    <string name="difficulty_hard">SCHWER</string>
+
+    <!-- Career Strings -->
+    <string name="current_level_label">AKTUELL</string>
 </resources>

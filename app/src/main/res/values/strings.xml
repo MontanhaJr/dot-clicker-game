@@ -56,4 +56,18 @@
     <string name="achievement_founder_desc">Play 10 matches during the launch year (until end of 2026) to unlock the Founder Gold style.</string>
     <string name="career_title">Journey</string>
     <string name="level_label">Level %d</string>
+
+    <!-- Stats Strings -->
+    <string name="stats_title">STATISTICS</string>
+    <string name="global_performance">GLOBAL PERFORMANCE</string>
+    <string name="triangles_formed">TRIANGLES FORMED</string>
+    <string name="avg_time_per_match">AVG TIME PER MATCH</string>
+    <string name="win_rate_vs_cpu">WIN RATE VS CPU</string>
+    <string name="training_only_label">(TRAINING MODE ONLY)</string>
+    <string name="difficulty_easy">EASY</string>
+    <string name="difficulty_medium">MEDIUM</string>
+    <string name="difficulty_hard">HARD</string>
+
+    <!-- Career Strings -->
+    <string name="current_level_label">CURRENT</string>
 </resources>
