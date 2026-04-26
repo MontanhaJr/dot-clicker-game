@@ -4,31 +4,31 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.MaterialTheme
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.games.PlayGamesSdk
+import androidx.compose.runtime.*
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.montanhajr.pointgame.ui.screens.GameModeScreen
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.montanhajr.pointgame.ui.screens.SplashScreen
+import com.montanhajr.pointgame.ui.theme.DotConnectTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 1. Instala a splash nativa - O Android agora sabe que deve liberar a tela assim que o Compose desenhar
+        installSplashScreen()
+        
         super.onCreate(savedInstanceState)
         
-        // Inicializa o Play Games SDK v2 antes de qualquer outra coisa
-        PlayGamesSdk.initialize(this)
-        
+        // 2. Configura a tela cheia imediatamente
         enableEdgeToEdge()
-        
-        val backgroundScope = CoroutineScope(Dispatchers.IO)
-        backgroundScope.launch {
-            MobileAds.initialize(this@MainActivity) {}
-        }
 
         setContent {
-            MaterialTheme {
-                GameModeScreen()
+            DotConnectTheme {
+                var showComposeSplash by remember { mutableStateOf(true) }
+
+                if (showComposeSplash) {
+                    SplashScreen(onLoadingComplete = { showComposeSplash = false })
+                } else {
+                    GameModeScreen()
+                }
             }
         }
     }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Fundo para garantir que não haja transparência estranha se necessário, 
+         mas o tema já cuida disso. Aqui focamos no redimensionamento. -->
+    <item
+        android:drawable="@drawable/logo_company"
+        android:gravity="center"
+        android:width="120dp"
+        android:height="120dp" />
+</layer-list>
