@@ -37,6 +37,7 @@ import kotlin.random.Random
 fun DotsGameScreen(
     gameMode: GameMode,
     difficulty: Difficulty?,
+    gameType: GameType = GameType.TRIANGLES,
     numPlayers: Int,
     playerNames: List<String>? = null,
     boardStyle: BoardStyle = BoardStyle.DEFAULT_POP,
@@ -56,7 +57,8 @@ fun DotsGameScreen(
                 numPlayers = numPlayers,
                 playerNames = playerNames,
                 boardStyle = boardStyle,
-                careerLevel = careerLevel
+                careerLevel = careerLevel,
+                gameType = gameType
             )
         )
     }
@@ -159,8 +161,13 @@ fun DotsGameScreen(
     LaunchedEffect(gameState.gameOver) {
         if (gameState.gameOver) {
             val duration = System.currentTimeMillis() - matchStartTime
-            val humanTriangles = if (gameMode == GameMode.VS_CPU) gameState.playerScores[0] else gameState.playerScores.sum()
-            statsManager.addTriangles(humanTriangles)
+            val humanScore = if (gameMode == GameMode.VS_CPU) gameState.playerScores[0] else gameState.playerScores.sum()
+            
+            if (gameState.gameType == GameType.TRIANGLES) {
+                statsManager.addTriangles(humanScore)
+            } else {
+                statsManager.addSquares(humanScore)
+            }
             
             val newlyUnlocked = if (gameMode == GameMode.VS_CPU) {
                 val result = when {
@@ -204,9 +211,9 @@ fun DotsGameScreen(
             // Lógica especial de Shield ativo para a CPU
             if (gameState.protectionShieldTurns > 0) {
                 val allMoves = gameState.getAllValidMoves()
-                val onlyTriangleMoves = allMoves.all { gameState.moveCompletesTriangle(it) }
+                val onlyScoringMoves = allMoves.all { gameState.moveCompletesTriangle(it) }
                 
-                if (onlyTriangleMoves && allMoves.isNotEmpty()) {
+                if (onlyScoringMoves && allMoves.isNotEmpty()) {
                     delay(1000)
                     Toast.makeText(context, "Escudo ativo, nenhuma jogada disponível para a CPU", Toast.LENGTH_LONG).show()
                     gameState = gameState.skipCpuTurnDueToShield()
@@ -217,12 +224,12 @@ fun DotsGameScreen(
             delay(800)
             val cpuMove = gameState.getCpuMove()
             if (cpuMove != null) {
-                val previousTriangles = gameState.triangles.size
+                val previousScore = gameState.playerScores.sum()
                 stateHistory = stateHistory + gameState
                 gameState = gameState.drawLine(cpuMove.first, cpuMove.second)
                 scope.launch {
                     try {
-                        if (gameState.triangles.size > previousTriangles) cpuPointSound?.start() else connectionSound?.start()
+                        if (gameState.playerScores.sum() > previousScore) cpuPointSound?.start() else connectionSound?.start()
                     } catch (e: Exception) {}
                 }
             }
@@ -237,7 +244,8 @@ fun DotsGameScreen(
             numPlayers = numPlayers,
             playerNames = playerNames,
             boardStyle = boardStyle,
-            careerLevel = gameState.careerLevel
+            careerLevel = gameState.careerLevel,
+            gameType = gameState.gameType
         )
         matchStartTime = System.currentTimeMillis()
         showRestartDialog = false
@@ -260,7 +268,8 @@ fun DotsGameScreen(
             playerNames = playerNames,
             boardStyle = boardStyle,
             numPointsParam = careerManager.getPointsCountForLevel(nextLevel),
-            careerLevel = nextLevel
+            careerLevel = nextLevel,
+            gameType = if (nextLevel % 2 != 0) GameType.TRIANGLES else GameType.SQUARES
         )
         matchStartTime = System.currentTimeMillis()
         showLevelCompleteDialog = false
@@ -283,7 +292,7 @@ fun DotsGameScreen(
             PowerUpType.EAGLE_EYE -> {
                 val completable = gameState.getAllCompletableLines()
                 if (completable.isEmpty()) {
-                    Toast.makeText(context, "Nenhum triângulo pronto para fechar!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Nada pronto para fechar!", Toast.LENGTH_SHORT).show()
                 } else {
                     scope.launch {
                         showEagleEye = true
@@ -300,10 +309,10 @@ fun DotsGameScreen(
             PowerUpType.AUTO_SNAP -> {
                 val move = gameState.getAutoSnapMove()
                 if (move != null) {
-                    val previousTriangles = gameState.triangles.size
+                    val previousScore = gameState.playerScores.sum()
                     stateHistory = stateHistory + gameState
                     gameState = gameState.drawLine(move.first, move.second)
-                    scope.launch { if (gameState.triangles.size > previousTriangles) playerPointSound?.start() else connectionSound?.start() }
+                    scope.launch { if (gameState.playerScores.sum() > previousScore) playerPointSound?.start() else connectionSound?.start() }
                 }
             }
             PowerUpType.DOUBLE_MOVE -> gameState = gameState.copy(doubleMoveActive = true)
@@ -337,12 +346,12 @@ fun DotsGameScreen(
                         isEraserActive = isEraserActive,
                         onLineDrawn = { startId, endId ->
                             if (gameState.isValidMove(startId, endId)) {
-                                val previousTriangles = gameState.triangles.size
+                                val previousScore = gameState.playerScores.sum()
                                 stateHistory = stateHistory + gameState
                                 gameState = gameState.drawLine(startId, endId)
                                 scope.launch {
                                     try {
-                                        if (gameState.triangles.size > previousTriangles) playerPointSound?.start() else connectionSound?.start()
+                                        if (gameState.playerScores.sum() > previousScore) playerPointSound?.start() else connectionSound?.start()
                                     } catch (e: Exception) {}
                                 }
                             }

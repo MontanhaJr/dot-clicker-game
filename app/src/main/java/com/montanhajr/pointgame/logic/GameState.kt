@@ -9,6 +9,8 @@ data class GameState(
     val points: List<DotPoint>,
     val lines: List<Line> = emptyList(),
     val triangles: List<Triangle> = emptyList(),
+    val squares: List<Square> = emptyList(),
+    val gameType: GameType = GameType.TRIANGLES,
     val currentPlayer: Int = 1,
     val playerScores: List<Int>,
     val playerNames: List<String>,
@@ -27,6 +29,8 @@ data class GameState(
     val doubleMoveActive: Boolean = false
 ) {
     companion object {
+        const val GRID_SPACING = 150f
+
         fun createNew(
             isCpuGame: Boolean = false,
             difficulty: Difficulty = Difficulty.MEDIUM,
@@ -34,35 +38,57 @@ data class GameState(
             playerNames: List<String>? = null,
             boardStyle: BoardStyle = BoardStyle.DEFAULT_POP,
             numPointsParam: Int? = null,
-            careerLevel: Int? = null
+            careerLevel: Int? = null,
+            gameType: GameType = GameType.TRIANGLES
         ): GameState {
             val random = Random(System.currentTimeMillis())
-            val numPoints = numPointsParam ?: (18 + random.nextInt(8))
             val points = mutableListOf<DotPoint>()
-            val minDistance = 110f
             val canvasWidth = 900f
             val canvasHeight = 1200f
-            val padding = 150f
-            var attempts = 0
-            val maxAttempts = 2000
 
-            while (points.size < numPoints && attempts < maxAttempts) {
-                val x = padding + random.nextFloat() * (canvasWidth - 2 * padding)
-                val y = padding + random.nextFloat() * (canvasHeight - 2 * padding)
-                val newPoint = Offset(x, y)
+            if (gameType == GameType.TRIANGLES) {
+                val padding = 150f
+                val numPoints = numPointsParam ?: (18 + random.nextInt(8))
+                val minDistance = 110f
+                var attempts = 0
+                val maxAttempts = 2000
 
-                val isFarEnough = points.all { existingPoint ->
-                    val distance = sqrt(
-                        (newPoint.x - existingPoint.position.x) * (newPoint.x - existingPoint.position.x) +
-                                (newPoint.y - existingPoint.position.y) * (newPoint.y - existingPoint.position.y)
-                    )
-                    distance >= minDistance
+                while (points.size < numPoints && attempts < maxAttempts) {
+                    val x = padding + random.nextFloat() * (canvasWidth - 2 * padding)
+                    val y = padding + random.nextFloat() * (canvasHeight - 2 * padding)
+                    val newPoint = Offset(x, y)
+
+                    val isFarEnough = points.all { existingPoint ->
+                        val distance = sqrt(
+                            (newPoint.x - existingPoint.position.x) * (newPoint.x - existingPoint.position.x) +
+                                    (newPoint.y - existingPoint.position.y) * (newPoint.y - existingPoint.position.y)
+                        )
+                        distance >= minDistance
+                    }
+
+                    if (isFarEnough) {
+                        points.add(DotPoint(points.size, newPoint))
+                    }
+                    attempts++
                 }
-
-                if (isFarEnough) {
-                    points.add(DotPoint(points.size, newPoint))
+            } else {
+                // SQUARES mode: Perfect Grid layout (5x7)
+                val cols = 5
+                val rows = 7
+                val spacing = GRID_SPACING
+                val gridWidth = spacing * (cols - 1)
+                val gridHeight = spacing * (rows - 1)
+                
+                val startX = (canvasWidth - gridWidth) / 2
+                val startY = (canvasHeight - gridHeight) / 2
+                
+                for (r in 0 until rows) {
+                    for (c in 0 until cols) {
+                        val x = startX + c * spacing
+                        val y = startY + r * spacing
+                        points.add(DotPoint(points.size, Offset(x, y)))
+                    }
                 }
-                attempts++
             }
 
             val names = playerNames ?: List(numPlayers) { i -> if (isCpuGame && i == 1) "CPU" else "P${i + 1}" }
@@ -76,7 +102,8 @@ data class GameState(
                 isCpuGame = isCpuGame,
                 difficulty = difficulty,
                 boardStyle = boardStyle,
-                careerLevel = careerLevel
+                careerLevel = careerLevel,
+                gameType = gameType
             )
         }
     }
@@ -88,21 +115,24 @@ data class GameState(
         val newLine = Line(startId, endId, currentPlayer)
         val newLines = lines + newLine
         
-        val newlyFoundTriangles = findTrianglesForLine(newLine, newLines)
+        val newlyFoundTriangles = if (gameType == GameType.TRIANGLES) findTrianglesForLine(newLine, newLines) else emptyList()
+        val newlyFoundSquares = if (gameType == GameType.SQUARES) findSquaresForLine(newLine, newLines) else emptyList()
         
-        // Filter triangles if shield is active for human (meaning CPU cannot score)
+        // Filter if shield is active for human (meaning CPU cannot score)
         val finalTrianglesToScore = if (isCpuTurn && protectionShieldTurns > 0) emptyList() else newlyFoundTriangles
+        val finalSquaresToScore = if (isCpuTurn && protectionShieldTurns > 0) emptyList() else newlyFoundSquares
         
         val newTriangles = triangles + finalTrianglesToScore
-        val trianglesCompleted = finalTrianglesToScore.isNotEmpty()
+        val newSquares = squares + finalSquaresToScore
+        val completed = finalTrianglesToScore.isNotEmpty() || finalSquaresToScore.isNotEmpty()
         
         val newScores = playerScores.toMutableList()
-        if (trianglesCompleted) {
+        if (completed) {
             val multiplier = if (!isCpuTurn) scoreMultiplier else 1
-            newScores[currentPlayer - 1] += finalTrianglesToScore.size * multiplier
+            newScores[currentPlayer - 1] += (finalTrianglesToScore.size + finalSquaresToScore.size) * multiplier
         }
 
-        val isGameOver = !hasValidMovesLeft(newLines, newTriangles)
+        val isGameOver = !hasValidMovesLeft(newLines, newTriangles, newSquares)
         
         var nextFreezeTurns = freezeCpuTurns
         var nextShieldTurns = protectionShieldTurns
@@ -116,7 +146,7 @@ data class GameState(
             val winnerIdx = getWinnerIndexInternal(newScores)
             nextPlayer = winnerIdx + 1
         } else {
-            if (trianglesCompleted) {
+            if (completed) {
                 // Jogador que pontuou joga novamente
                 nextPlayer = currentPlayer
             } else {
@@ -144,6 +174,7 @@ data class GameState(
         return copy(
             lines = newLines,
             triangles = newTriangles,
+            squares = newSquares,
             currentPlayer = nextPlayer,
             playerScores = newScores,
             gameOver = isGameOver,
@@ -180,7 +211,11 @@ data class GameState(
     fun moveCompletesTriangle(move: Pair<Int, Int>): Boolean {
         val newLine = Line(move.first, move.second, currentPlayer)
         val testLines = lines + newLine
-        return findTrianglesForLine(newLine, testLines).isNotEmpty()
+        return if (gameType == GameType.TRIANGLES) {
+            findTrianglesForLine(newLine, testLines).isNotEmpty()
+        } else {
+            findSquaresForLine(newLine, testLines).isNotEmpty()
+        }
     }
 
     fun removeLine(line: Line): GameState {
@@ -193,20 +228,27 @@ data class GameState(
             val ids = setOf(t.p1Id, t.p2Id, t.p3Id)
             ids.contains(targetLine.startId) && ids.contains(targetLine.endId)
         }
+        
+        val affectedSquares = squares.filter { s ->
+            val ids = setOf(s.p1Id, s.p2Id, s.p3Id, s.p4Id)
+            ids.contains(targetLine.startId) && ids.contains(targetLine.endId)
+        }
 
         val newScores = playerScores.toMutableList()
-        affectedTriangles.forEach { t ->
-            if (newScores[t.owner - 1] > 0) {
-                newScores[t.owner - 1] -= 1
+        (affectedTriangles.map { it.owner } + affectedSquares.map { it.owner }).forEach { owner ->
+            if (newScores[owner - 1] > 0) {
+                newScores[owner - 1] -= 1
             }
         }
 
         val newLines = lines.filterNot { it === targetLine }
         val newTriangles = triangles.filterNot { affectedTriangles.contains(it) }
+        val newSquares = squares.filterNot { affectedSquares.contains(it) }
         
         return copy(
             lines = newLines, 
             triangles = newTriangles,
+            squares = newSquares,
             playerScores = newScores
         )
     }
@@ -216,38 +258,29 @@ data class GameState(
             for (j in i + 1 until points.size) {
                 if (isValidMove(points[i].id, points[j].id)) {
                     val testLines = lines + Line(points[i].id, points[j].id, currentPlayer)
-                    if (findTrianglesForLine(testLines.last(), testLines).isNotEmpty()) {
-                        return Pair(points[i].id, points[j].id)
+                    if (gameType == GameType.TRIANGLES) {
+                        if (findTrianglesForLine(testLines.last(), testLines).isNotEmpty()) return Pair(points[i].id, points[j].id)
+                    } else {
+                        if (findSquaresForLine(testLines.last(), testLines).isNotEmpty()) return Pair(points[i].id, points[j].id)
                     }
                 }
             }
         }
         
-        val allPossibleMoves = mutableListOf<Pair<Int, Int>>()
-        for (i in points.indices) {
-            for (j in i + 1 until points.size) {
-                if (isValidMove(points[i].id, points[j].id)) {
-                    allPossibleMoves.add(Pair(points[i].id, points[j].id))
-                }
-            }
-        }
-        
+        val allPossibleMoves = getAllValidMoves()
         if (allPossibleMoves.isEmpty()) return null
         
         val safeMoves = allPossibleMoves.filter { move ->
             val testState = this.copy(lines = lines + Line(move.first, move.second, currentPlayer))
             var cpuCanScore = false
-            for (x in points.indices) {
-                for (y in x + 1 until points.size) {
-                    if (testState.isValidMove(points[x].id, points[y].id)) {
-                        val cpuLines = testState.lines + Line(points[x].id, points[y].id, 2)
-                        if (testState.findTrianglesForLine(cpuLines.last(), cpuLines).isNotEmpty()) {
-                            cpuCanScore = true
-                            break
-                        }
-                    }
+            val cpuMoves = testState.getAllValidMoves()
+            for (cpuMove in cpuMoves) {
+                val cpuLines = testState.lines + Line(cpuMove.first, cpuMove.second, 2)
+                if (gameType == GameType.TRIANGLES) {
+                    if (testState.findTrianglesForLine(cpuLines.last(), cpuLines).isNotEmpty()) { cpuCanScore = true; break }
+                } else {
+                    if (testState.findSquaresForLine(cpuLines.last(), cpuLines).isNotEmpty()) { cpuCanScore = true; break }
                 }
-                if (cpuCanScore) break
             }
             !cpuCanScore
         }
@@ -261,8 +294,10 @@ data class GameState(
             for (j in i + 1 until points.size) {
                 if (isValidMove(points[i].id, points[j].id)) {
                     val testLines = lines + Line(points[i].id, points[j].id, currentPlayer)
-                    if (findTrianglesForLine(testLines.last(), testLines).isNotEmpty()) {
-                        completable.add(Pair(points[i].id, points[j].id))
+                    if (gameType == GameType.TRIANGLES) {
+                        if (findTrianglesForLine(testLines.last(), testLines).isNotEmpty()) completable.add(Pair(points[i].id, points[j].id))
+                    } else {
+                        if (findSquaresForLine(testLines.last(), testLines).isNotEmpty()) completable.add(Pair(points[i].id, points[j].id))
                     }
                 }
             }
@@ -271,15 +306,7 @@ data class GameState(
     }
 
     fun getAllPossibleConnections(): List<Pair<Int, Int>> {
-        val connections = mutableListOf<Pair<Int, Int>>()
-        for (i in points.indices) {
-            for (j in i + 1 until points.size) {
-                if (isValidMove(points[i].id, points[j].id)) {
-                    connections.add(Pair(points[i].id, points[j].id))
-                }
-            }
-        }
-        return connections
+        return getAllValidMoves()
     }
 
     fun getWinnerIndex(): Int {
@@ -301,7 +328,7 @@ data class GameState(
             if (c == a || c == b) continue
             
             val hasAC = allLines.any { (it.startId == a && it.endId == c) || (it.startId == c && it.endId == a) }
-            val hasBC = allLines.any { (it.startId == b && it.endId == c) || (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
+            val hasBC = allLines.any { (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
             
             if (hasAC && hasBC) {
                 if (!hasAnyPointInside(a, b, c) && !hasLinesCrossing(a, b, c, allLines)) {
@@ -310,6 +337,63 @@ data class GameState(
             }
         }
         return found
+    }
+
+    private fun findSquaresForLine(lastLine: Line, allLines: List<Line>): List<Square> {
+        val found = mutableListOf<Square>()
+        val a = lastLine.startId
+        val b = lastLine.endId
+        
+        // Em um grid 5x7: ID = row * 5 + col
+        val rA = a / 5; val cA = a % 5
+        val rB = b / 5; val cB = b % 5
+        
+        val potentialSquares = mutableListOf<List<Int>>()
+        
+        if (rA == rB) { // Linha Horizontal
+            val r = rA
+            val cMin = minOf(cA, cB)
+            // Quadrado acima
+            if (r > 0) {
+                potentialSquares.add(listOf((r-1)*5 + cMin, (r-1)*5 + cMin + 1, r*5 + cMin, r*5 + cMin + 1))
+            }
+            // Quadrado abaixo
+            if (r < 6) {
+                potentialSquares.add(listOf(r*5 + cMin, r*5 + cMin + 1, (r+1)*5 + cMin, (r+1)*5 + cMin + 1))
+            }
+        } else if (cA == cB) { // Linha Vertical
+            val c = cA
+            val rMin = minOf(rA, rB)
+            // Quadrado à esquerda
+            if (c > 0) {
+                potentialSquares.add(listOf(rMin*5 + c - 1, rMin*5 + c, (rMin+1)*5 + c - 1, (rMin+1)*5 + c))
+            }
+            // Quadrado à direita
+            if (c < 4) {
+                potentialSquares.add(listOf(rMin*5 + c, rMin*5 + c + 1, (rMin+1)*5 + c, (rMin+1)*5 + c + 1))
+            }
+        }
+
+        for (sqPoints in potentialSquares) {
+            val p1 = sqPoints[0]; val p2 = sqPoints[1]
+            val p3 = sqPoints[2]; val p4 = sqPoints[3]
+            
+            // Verifica se todas as 4 arestas do quadrado existem
+            // Arestas: (p1,p2), (p3,p4), (p1,p3), (p2,p4)
+            if (hasLine(p1, p2, allLines) && hasLine(p3, p4, allLines) && 
+                hasLine(p1, p3, allLines) && hasLine(p2, p4, allLines)) {
+                
+                // Evita adicionar o mesmo quadrado mais de uma vez
+                if (!squares.any { s -> setOf(s.p1Id, s.p2Id, s.p3Id, s.p4Id) == sqPoints.toSet() }) {
+                    found.add(Square(p1, p2, p3, p4, lastLine.player))
+                }
+            }
+        }
+        return found
+    }
+
+    private fun hasLine(id1: Int, id2: Int, lines: List<Line>): Boolean {
+        return lines.any { (it.startId == id1 && it.endId == id2) || (it.startId == id2 && it.endId == id1) }
     }
 
     fun getCpuMove(): Pair<Int, Int>? {
@@ -323,9 +407,20 @@ data class GameState(
         val start = points.find { it.id == startId }?.position ?: return false
         val end = points.find { it.id == endId }?.position ?: return false
 
-        if (currentLines.any { doLinesIntersect(start, end, points.find { p -> p.id == it.startId }?.position ?: Offset.Zero, points.find { p -> p.id == it.endId }?.position ?: Offset.Zero) }) return false
-        if (points.any { it.id != startId && it.id != endId && isPointOnLineSegment(it.position, start, end) }) return false
-        if (triangles.any { lineIntersectsTriangle(start, end, it) }) return false
+        if (gameType == GameType.SQUARES) {
+            val dx = kotlin.math.abs(start.x - end.x)
+            val dy = kotlin.math.abs(start.y - end.y)
+            val spacing = GRID_SPACING
+
+            val isHorizontal = dy < 10f && kotlin.math.abs(dx - spacing) < 20f
+            val isVertical = dx < 10f && kotlin.math.abs(dy - spacing) < 20f
+            
+            if (!isHorizontal && !isVertical) return false
+        } else {
+            if (currentLines.any { doLinesIntersect(start, end, points.find { p -> p.id == it.startId }?.position ?: Offset.Zero, points.find { p -> p.id == it.endId }?.position ?: Offset.Zero) }) return false
+            if (points.any { it.id != startId && it.id != endId && isPointOnLineSegment(it.position, start, end) }) return false
+            if (triangles.any { lineIntersectsTriangle(start, end, it) }) return false
+        }
 
         return true
     }
@@ -391,8 +486,8 @@ data class GameState(
         return kotlin.math.abs(a1 + a2 + a3 - area) < 1f
     }
 
-    private fun hasValidMovesLeft(currentLines: List<Line>, currentTriangles: List<Triangle>): Boolean {
-        val testState = this.copy(lines = currentLines, triangles = currentTriangles)
+    private fun hasValidMovesLeft(currentLines: List<Line>, currentTriangles: List<Triangle>, currentSquares: List<Square>): Boolean {
+        val testState = this.copy(lines = currentLines, triangles = currentTriangles, squares = currentSquares)
         for (i in points.indices) {
             for (j in i + 1 until points.size) {
                 if (testState.isValidMove(points[i].id, points[j].id)) return true

@@ -7,11 +7,17 @@ import com.montanhajr.pointgame.ui.theme.*
 data class DotPoint(val id: Int, val position: Offset)
 data class Line(val startId: Int, val endId: Int, val player: Int)
 data class Triangle(val p1Id: Int, val p2Id: Int, val p3Id: Int, val owner: Int)
+data class Square(val p1Id: Int, val p2Id: Int, val p3Id: Int, val p4Id: Int, val owner: Int)
 
 enum class GameMode {
     TWO_PLAYERS,
     VS_CPU,
     MULTIPLAYER
+}
+
+enum class GameType {
+    TRIANGLES,
+    SQUARES
 }
 
 enum class Difficulty {

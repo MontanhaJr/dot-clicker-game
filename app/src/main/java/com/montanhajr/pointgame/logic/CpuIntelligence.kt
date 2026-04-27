@@ -1,6 +1,7 @@
 package com.montanhajr.pointgame.logic
 
 import com.montanhajr.pointgame.models.Difficulty
+import com.montanhajr.pointgame.models.GameType
 import com.montanhajr.pointgame.models.Line
 import kotlin.random.Random
 
@@ -21,52 +22,41 @@ class CpuIntelligence(private val gameState: GameState) {
 
     private fun getCpuMoveMedium(): Pair<Int, Int>? {
         if (Random.nextFloat() < 0.3f) return getCpuMoveEasy()
-        return findTriangleCompletingMove() ?: getCpuMoveEasy()
+        return findScoringMove() ?: getCpuMoveEasy()
     }
 
     private fun getCpuMoveHard(): Pair<Int, Int>? {
         val allMoves = getAllValidMoves()
         if (allMoves.isEmpty()) return null
 
-        // 1. Tentar completar um triângulo (Prioridade máxima)
-        // Otimização: Já temos wouldMoveCompleteTriangle que é relativamente rápido
+        // 1. Tentar completar um ponto (Triângulo ou Quadrado)
         var bestMove: Pair<Int, Int>? = null
         for (move in allMoves) {
-            if (wouldMoveCompleteTriangle(move.first, move.second, gameState.lines)) {
+            if (wouldMoveCompleteScore(move.first, move.second, gameState.lines)) {
                 return move
             }
         }
 
-        // 2. Bloquear oponente (se ele puder completar um triângulo no próximo turno)
-        // Simulando como se fosse o jogador 1
+        // 2. Bloquear oponente (se ele puder completar no próximo turno)
         for (move in allMoves) {
-            if (wouldMoveCompleteTriangle(move.first, move.second, gameState.lines, playerForSim = 1)) {
+            if (wouldMoveCompleteScore(move.first, move.second, gameState.lines, playerForSim = 1)) {
                 return move
             }
         }
 
-        // 3. Filtrar movimentos perigosos e escolher o melhor
-        // Movimento perigoso é aquele que permite ao oponente completar um triângulo
-        val safeMoves = mutableListOf<Pair<Int, Int>>()
-        for (move in allMoves) {
-            if (!isMoveDangerous(move)) {
-                safeMoves.add(move)
-            }
-        }
+        // 3. Filtrar movimentos perigosos
+        val safeMoves = allMoves.filter { !isMoveDangerous(it) }
 
         if (safeMoves.isNotEmpty()) {
-            // Escolhe um movimento seguro que maximize o potencial futuro (heurística simples)
-            // Para economizar hardware, vamos evitar countPotentialTriangles que é O(N^3)
-            // Em vez disso, apenas pegamos um aleatório dos seguros ou o primeiro.
             return safeMoves.random()
         }
 
-        // 4. Se todos forem perigosos, escolher o que abre menos triângulos para o oponente
+        // 4. Se todos forem perigosos, escolher o menos pior
         var minOpened = Int.MAX_VALUE
         var selectedMove = allMoves[0]
         
         for (move in allMoves) {
-            val opened = countTrianglesOpenedByMove(move)
+            val opened = countScoresOpenedByMove(move)
             if (opened < minOpened) {
                 minOpened = opened
                 selectedMove = move
@@ -91,33 +81,36 @@ class CpuIntelligence(private val gameState: GameState) {
         return moves
     }
 
-    private fun findTriangleCompletingMove(): Pair<Int, Int>? {
-        val points = gameState.points
-        for (i in points.indices) {
-            val p1Id = points[i].id
-            for (j in i + 1 until points.size) {
-                val p2Id = points[j].id
-                if (gameState.isValidMove(p1Id, p2Id)) {
-                    if (wouldMoveCompleteTriangle(p1Id, p2Id, gameState.lines)) {
-                        return p1Id to p2Id
-                    }
-                }
+    private fun findScoringMove(): Pair<Int, Int>? {
+        val allMoves = getAllValidMoves()
+        for (move in allMoves) {
+            if (wouldMoveCompleteScore(move.first, move.second, gameState.lines)) {
+                return move
             }
         }
         return null
+    }
+
+    private fun wouldMoveCompleteScore(
+        startId: Int, 
+        endId: Int, 
+        currentLines: List<Line>, 
+        playerForSim: Int = gameState.currentPlayer
+    ): Boolean {
+        return if (gameState.gameType == GameType.TRIANGLES) {
+            wouldMoveCompleteTriangle(startId, endId, currentLines, playerForSim)
+        } else {
+            wouldMoveCompleteSquare(startId, endId, currentLines, playerForSim)
+        }
     }
 
     private fun wouldMoveCompleteTriangle(
         startId: Int, 
         endId: Int, 
         currentLines: List<Line>, 
-        playerForSim: Int = gameState.currentPlayer
+        playerForSim: Int
     ): Boolean {
         val points = gameState.points
-        // Otimização: usar um Set para busca rápida de linhas existentes
-        // No entanto, para o número pequeno de linhas, List.any costuma ser rápido o suficiente.
-        // Mas vamos otimizar criando uma representação de adjacência se necessário.
-        
         for (p in points) {
             val cId = p.id
             if (cId == startId || cId == endId) continue
@@ -136,41 +129,73 @@ class CpuIntelligence(private val gameState: GameState) {
         return false
     }
 
-    private fun isMoveDangerous(move: Pair<Int, Int>): Boolean {
-        val (a, b) = move
-        // Se este movimento completa um triângulo para a CPU, não é perigoso para a CPU
-        if (wouldMoveCompleteTriangle(a, b, gameState.lines)) return false
-
-        val nextLines = gameState.lines + Line(a, b, gameState.currentPlayer)
-        val points = gameState.points
+    private fun wouldMoveCompleteSquare(
+        startId: Int, 
+        endId: Int, 
+        currentLines: List<Line>, 
+        playerForSim: Int
+    ): Boolean {
+        val p1 = gameState.points.find { it.id == startId }?.position ?: return false
+        val p2 = gameState.points.find { it.id == endId }?.position ?: return false
         
-        for (p in points) {
-            val c = p.id
-            if (c == a || c == b) continue
-            
-            val hasAC = nextLines.any { (it.startId == a && it.endId == c) || (it.startId == c && it.endId == a) }
-            val hasBC = nextLines.any { (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
-            
-            if (hasAC && gameState.isValidMove(b, c, nextLines) && wouldMoveCompleteTriangle(b, c, nextLines, playerForSim = 1)) return true
-            if (hasBC && gameState.isValidMove(a, c, nextLines) && wouldMoveCompleteTriangle(a, c, nextLines, playerForSim = 1)) return true
+        // Em um grid, se desenharmos uma linha, um quadrado pode ser formado 'acima' ou 'abaixo' dela (ou esquerda/direita)
+        // Procuramos por dois pontos que completem o quadrado com startId e endId.
+        val points = gameState.points
+        for (i in points.indices) {
+            for (j in i + 1 until points.size) {
+                val p3Id = points[i].id
+                val p4Id = points[j].id
+                if (p3Id == startId || p3Id == endId || p4Id == startId || p4Id == endId) continue
+                
+                val p3 = points[i].position
+                val p4 = points[j].position
+                
+                // Verificar se formam um quadrado (mesma distância)
+                val d12 = dist(p1, p2)
+                val d13 = dist(p1, p3)
+                val d24 = dist(p2, p4)
+                val d34 = dist(p3, p4)
+                
+                if (kotlin.math.abs(d12 - d13) < 5f && kotlin.math.abs(d12 - d24) < 5f && kotlin.math.abs(d12 - d34) < 5f) {
+                    val has13 = currentLines.any { (it.startId == startId && it.endId == p3Id) || (it.startId == p3Id && it.endId == startId) }
+                    val has24 = currentLines.any { (it.startId == endId && it.endId == p4Id) || (it.startId == p4Id && it.endId == endId) }
+                    val has34 = currentLines.any { (it.startId == p3Id && it.endId == p4Id) || (it.startId == p4Id && it.endId == p3Id) }
+                    
+                    if (has13 && has24 && has34) return true
+                }
+            }
         }
         return false
     }
 
-    private fun countTrianglesOpenedByMove(move: Pair<Int, Int>): Int {
+    private fun dist(a: androidx.compose.ui.geometry.Offset, b: androidx.compose.ui.geometry.Offset): Float {
+        return kotlin.math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y))
+    }
+
+    private fun isMoveDangerous(move: Pair<Int, Int>): Boolean {
+        val (a, b) = move
+        if (wouldMoveCompleteScore(a, b, gameState.lines)) return false
+
+        val nextLines = gameState.lines + Line(a, b, gameState.currentPlayer)
+        val allMoves = getAllValidMoves() // Simplificado para CPU não ficar lenta
+        
+        for (m in allMoves) {
+            // Se o oponente (player 1) puder completar um score após esse movimento
+            if (wouldMoveCompleteScore(m.first, m.second, nextLines, playerForSim = 1)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun countScoresOpenedByMove(move: Pair<Int, Int>): Int {
         val (a, b) = move
         var count = 0
         val nextLines = gameState.lines + Line(a, b, gameState.currentPlayer)
-        val points = gameState.points
+        val allMoves = getAllValidMoves()
         
-        for (p in points) {
-            val c = p.id
-            if (c == a || c == b) continue
-            val hasAC = nextLines.any { (it.startId == a && it.endId == c) || (it.startId == c && it.endId == a) }
-            val hasBC = nextLines.any { (it.startId == b && it.endId == c) || (it.startId == c && it.endId == b) }
-            
-            if (hasAC && gameState.isValidMove(b, c, nextLines) && wouldMoveCompleteTriangle(b, c, nextLines, playerForSim = 1)) count++
-            if (hasBC && gameState.isValidMove(a, c, nextLines) && wouldMoveCompleteTriangle(a, c, nextLines, playerForSim = 1)) count++
+        for (m in allMoves) {
+            if (wouldMoveCompleteScore(m.first, m.second, nextLines, playerForSim = 1)) count++
         }
         return count
     }

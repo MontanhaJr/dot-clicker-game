@@ -32,6 +32,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.montanhajr.pointgame.R
 import com.montanhajr.pointgame.logic.GameState
 import com.montanhajr.pointgame.models.PowerUpType
+import com.montanhajr.pointgame.models.GameType
 import com.montanhajr.pointgame.ui.theme.*
 import androidx.compose.foundation.border
 
@@ -56,7 +57,7 @@ fun GameDialogManager(
     onDismissFallback: () -> Unit,
     onPremiumFromFallback: () -> Unit
 ) {
-    if (showRules) RulesDialog(onDismiss = onDismissRules)
+    if (showRules) RulesDialog(gameType = gameState.gameType, onDismiss = onDismissRules)
     if (showRestart) RestartConfirmDialog(onConfirm = onConfirmRestart, onDismiss = onDismissRestart)
     if (showPremium) PremiumDialog(onDismiss = onDismissPremium, onSubscribeClick = onSubscribePremium)
     
@@ -352,7 +353,7 @@ fun AchievementUnlockedDialog(achievementName: String, onDismiss: () -> Unit) {
 }
 
 @Composable
-fun RulesDialog(onDismiss: () -> Unit) {
+fun RulesDialog(gameType: GameType, onDismiss: () -> Unit) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -389,11 +390,24 @@ fun RulesDialog(onDismiss: () -> Unit) {
                     // Regras Básicas
                     Text("REGRAS BÁSICAS", fontWeight = FontWeight.ExtraBold, color = PopWhite, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(12.dp))
-                    RuleItem(title = stringResource(R.string.objective_title), description = stringResource(R.string.objective_desc))
+                    
+                    val shapeName = if (gameType == GameType.TRIANGLES) "triângulos" else "quadrados"
+                    val shapeNameSingle = if (gameType == GameType.TRIANGLES) "triângulo" else "quadrado"
+
+                    RuleItem(
+                        title = stringResource(R.string.objective_title), 
+                        description = "Conecte os pontos para fechar $shapeName."
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
-                    RuleItem(title = stringResource(R.string.turns_title), description = stringResource(R.string.turns_desc))
+                    RuleItem(
+                        title = stringResource(R.string.turns_title), 
+                        description = "Ao completar um $shapeNameSingle, você joga novamente."
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
-                    RuleItem(title = stringResource(R.string.prohibited_title), description = stringResource(R.string.prohibited_desc))
+                    RuleItem(
+                        title = stringResource(R.string.prohibited_title), 
+                        description = "Não é permitido cruzar linhas ou $shapeName já formados."
+                    )
                     
                     Spacer(modifier = Modifier.height(24.dp))
                     Divider(color = PopWhite.copy(alpha = 0.1f))

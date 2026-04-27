@@ -83,27 +83,35 @@ fun StatsScreen(onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Card de Triângulos Totais (Destaque Principal)
-                PopStatsCard(
-                    title = stringResource(R.string.global_performance),
-                    content = {
-                        Text(
-                            text = "${stats.totalTriangles}",
-                            fontSize = 64.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = PopCyan,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 64.sp
-                        )
-                        Text(
-                            text = stringResource(R.string.triangles_formed), 
-                            color = PopWhite.copy(alpha = 0.7f),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                )
+                // Card de Triângulos e Quadrados Totais
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    PopStatsCard(
+                        modifier = Modifier.weight(1f),
+                        title = stringResource(R.string.triangles_formed).uppercase(),
+                        content = {
+                            Text(
+                                text = "${stats.totalTriangles}",
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = PopCyan,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    )
+                    PopStatsCard(
+                        modifier = Modifier.weight(1f),
+                        title = "QUADRADOS".uppercase(),
+                        content = {
+                            Text(
+                                text = "${stats.totalSquares}",
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = PopYellow,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    )
+                }
 
                 // Row para tempo médio
                 PopStatsCard(
@@ -115,7 +123,7 @@ fun StatsScreen(onBack: () -> Unit) {
                             text = String.format("%02d:%02d", minutes, seconds),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = PopYellow,
+                            color = PopWhite,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -161,25 +169,25 @@ fun StatsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-fun PopStatsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+fun PopStatsCard(modifier: Modifier = Modifier, title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = PopDeepBlue.copy(alpha = 0.8f)),
         border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Column(
-            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+            modifier = Modifier.padding(20.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = title, 
                 color = PopWhite.copy(alpha = 0.5f), 
-                fontSize = 12.sp, 
+                fontSize = 10.sp, 
                 fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             content()
         }
     }

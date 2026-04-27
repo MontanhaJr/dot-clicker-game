@@ -38,6 +38,7 @@ import com.montanhajr.pointgame.logic.StatisticsManager
 import com.montanhajr.pointgame.models.BoardStyle
 import com.montanhajr.pointgame.models.Difficulty
 import com.montanhajr.pointgame.models.GameMode
+import com.montanhajr.pointgame.models.GameType
 import com.montanhajr.pointgame.ui.components.AchievementDialog
 import com.montanhajr.pointgame.ui.components.GalaxyBackground
 import com.montanhajr.pointgame.ui.components.PremiumDialog
@@ -54,6 +55,7 @@ fun GameModeScreen() {
     
     var gameMode by remember { mutableStateOf<GameMode?>(null) }
     var difficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
+    var gameType by remember { mutableStateOf(GameType.TRIANGLES) }
     var numPlayers by remember { mutableIntStateOf(2) }
     var playerNames by remember { mutableStateOf<List<String>?>(null) }
     var careerLevel by remember { mutableStateOf<Int?>(null) }
@@ -67,6 +69,7 @@ fun GameModeScreen() {
         })
     }
     
+    var showTypeSelectionDialog by remember { mutableStateOf(false) }
     var showDifficultyDialog by remember { mutableStateOf(false) }
     var showMultiplayerDialog by remember { mutableStateOf(false) }
     var showPremiumDialog by remember { mutableStateOf(false) }
@@ -87,6 +90,8 @@ fun GameModeScreen() {
                         careerLevel = level
                         difficulty = careerManager.getDifficultyForLevel(level)
                         gameMode = GameMode.VS_CPU
+                        // Intercalar: levels ímpares = triângulo, pares = quadrado
+                        gameType = if (level % 2 != 0) GameType.TRIANGLES else GameType.SQUARES
                         numPlayers = 2
                         startGame = true
                         showCareerScreen = false
@@ -112,6 +117,7 @@ fun GameModeScreen() {
                 DotsGameScreen(
                     gameMode = gameMode!!,
                     difficulty = difficulty,
+                    gameType = gameType,
                     numPlayers = numPlayers,
                     playerNames = playerNames,
                     boardStyle = selectedBoardStyle,
@@ -150,7 +156,7 @@ fun GameModeScreen() {
                             gameMode = GameMode.TWO_PLAYERS
                             numPlayers = 2
                             playerNames = listOf("Player 1", "Player 2")
-                            startGame = true
+                            showTypeSelectionDialog = true
                          },
                         onVsCpu = { showDifficultyDialog = true },
                         onMultiplayer = { 
@@ -166,6 +172,21 @@ fun GameModeScreen() {
         }
     }
 
+    if (showTypeSelectionDialog) {
+        GameTypeDialog(
+            selectedType = gameType,
+            onTypeSelected = { 
+                gameType = it
+                startGame = true
+                showTypeSelectionDialog = false
+            },
+            onDismiss = { 
+                showTypeSelectionDialog = false
+                if (!startGame) gameMode = null
+            }
+        )
+    }
+
     if (showDifficultyDialog) {
         DifficultyDialog(
             selectedDifficulty = difficulty,
@@ -173,7 +194,7 @@ fun GameModeScreen() {
             onStartGame = {
                 gameMode = GameMode.VS_CPU
                 numPlayers = 2
-                startGame = true
+                showTypeSelectionDialog = true
                 showDifficultyDialog = false
             },
             onDismiss = { showDifficultyDialog = false }
@@ -187,7 +208,7 @@ fun GameModeScreen() {
             onStartGame = { names ->
                 playerNames = names
                 gameMode = GameMode.MULTIPLAYER
-                startGame = true
+                showTypeSelectionDialog = true
                 showMultiplayerDialog = false
             },
             onDismiss = { showMultiplayerDialog = false }
@@ -210,6 +231,50 @@ fun GameModeScreen() {
             onDismiss = { showAchievementDialog = false }
         )
     }
+}
+
+@Composable
+fun GameTypeDialog(
+    selectedType: GameType,
+    onTypeSelected: (GameType) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = PopDeepBlue,
+        titleContentColor = PopWhite,
+        shape = RoundedCornerShape(32.dp),
+        title = {
+            Text(
+                text = "Escolha o Modo",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Button(
+                    onClick = { onTypeSelected(GameType.TRIANGLES) },
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PopGreen),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("TRIÂNGULOS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                }
+                Button(
+                    onClick = { onTypeSelected(GameType.SQUARES) },
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PopBlue),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("QUADRADOS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                }
+            }
+        },
+        confirmButton = {}
+    )
 }
 
 @Composable

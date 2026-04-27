@@ -21,6 +21,11 @@ class StatisticsManager(private val context: Context) {
         prefs.edit().putInt("total_triangles", current + count).apply()
     }
 
+    fun addSquares(count: Int) {
+        val current = prefs.getInt("total_squares", 0)
+        prefs.edit().putInt("total_squares", current + count).apply()
+    }
+
     fun recordMatch(difficulty: Difficulty?, result: MatchResult, timeMs: Long, isTraining: Boolean = true): String? {
         val editor = prefs.edit()
         
@@ -115,6 +120,7 @@ class StatisticsManager(private val context: Context) {
         val totalMatches = prefs.getLong("total_matches", 0)
         return GameStats(
             totalTriangles = prefs.getInt("total_triangles", 0),
+            totalSquares = prefs.getInt("total_squares", 0),
             totalMatches = totalMatches,
             isFounderUnlocked = isFounderUnlocked(),
             easyStats = getDifficultyStats(Difficulty.EASY),
@@ -133,6 +139,15 @@ class StatisticsManager(private val context: Context) {
     }
 
     enum class MatchResult { WIN, LOSS, DRAW }
-    data class GameStats(val totalTriangles: Int, val totalMatches: Long, val isFounderUnlocked: Boolean, val easyStats: DifficultyStats, val mediumStats: DifficultyStats, val hardStats: DifficultyStats, val avgTimeMs: Long)
+    data class GameStats(
+        val totalTriangles: Int,
+        val totalSquares: Int,
+        val totalMatches: Long,
+        val isFounderUnlocked: Boolean,
+        val easyStats: DifficultyStats,
+        val mediumStats: DifficultyStats,
+        val hardStats: DifficultyStats,
+        val avgTimeMs: Long
+    )
     data class DifficultyStats(val wins: Int, val losses: Int, val draws: Int, val winRate: Int)
 }

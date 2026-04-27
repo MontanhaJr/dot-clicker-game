@@ -198,6 +198,52 @@ fun GameBoard(
                     )
                 }
             }
+            
+            // Quadrados
+            gameState.squares.forEach { square ->
+                val p1 = scaledPoints.find { it.id == square.p1Id }?.position ?: return@forEach
+                val p2 = scaledPoints.find { it.id == square.p2Id }?.position ?: return@forEach
+                val p3 = scaledPoints.find { it.id == square.p3Id }?.position ?: return@forEach
+                val p4 = scaledPoints.find { it.id == square.p4Id }?.position ?: return@forEach
+                
+                val color = getPlayerColor(square.owner)
+                // Ordenar pontos para formar um retângulo/quadrado correto para o Path
+                val pts = listOf(p1, p2, p3, p4)
+                val minX = pts.minOf { it.x }
+                val maxX = pts.maxOf { it.x }
+                val minY = pts.minOf { it.y }
+                val maxY = pts.maxOf { it.y }
+                
+                val rectPath = Path().apply {
+                    moveTo(minX, minY)
+                    lineTo(maxX, minY)
+                    lineTo(maxX, maxY)
+                    lineTo(minX, maxY)
+                    close()
+                }
+                
+                if (style == BoardStyle.DEFAULT_POP) {
+                    drawPath(path = rectPath, color = color)
+                    drawPath(path = rectPath, color = Color.White.copy(alpha = 0.2f))
+                } else {
+                    drawPath(path = rectPath, color = color.copy(alpha = 0.15f))
+                }
+                
+                val centerX = (minX + maxX) / 2
+                val centerY = (minY + maxY) / 2
+                val letter = getPlayerInitial(square.owner)
+                
+                drawContext.canvas.nativeCanvas.drawText(
+                    letter, centerX, centerY + 15,
+                    android.graphics.Paint().apply {
+                        this.color = if (style == BoardStyle.DEFAULT_POP) android.graphics.Color.WHITE else android.graphics.Color.argb((color.alpha * 255).toInt(), (color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt())
+                        textSize = 45f
+                        textAlign = android.graphics.Paint.Align.CENTER
+                        isFakeBoldText = true
+                        if (style == BoardStyle.DEFAULT_POP) setShadowLayer(10f, 0f, 0f, android.graphics.Color.BLACK)
+                    }
+                )
+            }
 
             // Linhas
             gameState.lines.forEach { line ->
