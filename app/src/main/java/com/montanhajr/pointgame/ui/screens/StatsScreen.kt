@@ -65,11 +65,6 @@ fun StatsScreen(onBack: () -> Unit) {
                             Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back), tint = PopWhite)
                         }
                     },
-                    actions = {
-                        IconButton(onClick = { showAchievementDialog = true }) {
-                            Icon(Icons.Default.EmojiEvents, contentDescription = stringResource(R.string.achievements_title), tint = PopYellow)
-                        }
-                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             }
@@ -100,7 +95,7 @@ fun StatsScreen(onBack: () -> Unit) {
                     )
                     PopStatsCard(
                         modifier = Modifier.weight(1f),
-                        title = "QUADRADOS".uppercase(),
+                        title = stringResource(R.string.squares_formed).uppercase(),
                         content = {
                             Text(
                                 text = "${stats.totalSquares}",
@@ -158,13 +153,6 @@ fun StatsScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
-    }
-
-    if (showAchievementDialog) {
-        AchievementDialog(
-            achievements = statsManager.getAchievements(),
-            onDismiss = { showAchievementDialog = false }
-        )
     }
 }
 

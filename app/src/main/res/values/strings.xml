@@ -13,11 +13,14 @@
     <string name="rules">Rules</string>
     <string name="new_game">New</string>
     <string name="objective_title">🎯 Objective</string>
-    <string name="objective_desc">Connect dots to close triangles.</string>
+    <string name="objective_desc_triangles">Connect dots to close triangles.</string>
+    <string name="objective_desc_squares">Connect dots to close squares.</string>
     <string name="turns_title">🎮 Turns</string>
-    <string name="turns_desc">Complete a triangle and play again.</string>
+    <string name="turns_desc_triangle">Complete a triangle and play again.</string>
+    <string name="turns_desc_square">Complete a square and play again.</string>
     <string name="prohibited_title">❌ Prohibited</string>
-    <string name="prohibited_desc">Do not cross lines or triangles.</string>
+    <string name="prohibited_desc_triangles">Do not cross lines or triangles.</string>
+    <string name="prohibited_desc_squares">Do not cross lines or squares.</string>
     <string name="understood">Got it</string>
     <string name="restart_title">🔄 Restart Game?</string>
     <string name="restart_desc">Are you sure you want to restart? All current progress will be lost.</string>
@@ -34,7 +37,7 @@
     <string name="easy_title">😊 Easy</string>
     <string name="easy_desc">CPU plays randomly</string>
     <string name="medium_title">🤔 Medium</string>
-    <string name="medium_desc">CPU tries to close triangles</string>
+    <string name="medium_desc">CPU tries to close shapes</string>
     <string name="hard_title">🧠 Hard</string>
     <string name="hard_desc">CPU plays strategically</string>
     <string name="play">Play</string>
@@ -61,6 +64,7 @@
     <string name="stats_title">STATISTICS</string>
     <string name="global_performance">GLOBAL PERFORMANCE</string>
     <string name="triangles_formed">TRIANGLES FORMED</string>
+    <string name="squares_formed">SQUARES FORMED</string>
     <string name="avg_time_per_match">AVG TIME PER MATCH</string>
     <string name="win_rate_vs_cpu">WIN RATE VS CPU</string>
     <string name="training_only_label">(TRAINING MODE ONLY)</string>
@@ -70,4 +74,48 @@
 
     <!-- Career Strings -->
     <string name="current_level_label">CURRENT</string>
+    
+    <!-- Dialog Strings -->
+    <string name="defeat_title">NOT THIS TIME!</string>
+    <string name="defeat_desc">CPU dominated level %d. Try again?</string>
+    <string name="retry_button">TRY AGAIN</string>
+    <string name="back_to_map">BACK TO MAP</string>
+    <string name="game_over_title">GAME OVER</string>
+    <string name="back_to_menu">BACK TO MENU</string>
+    <string name="level_complete_title">LEVEL %d COMPLETE!</string>
+    <string name="level_complete_desc">You mastered this challenge. Ready for the next?</string>
+    <string name="next_level_button">NEXT LEVEL</string>
+    <string name="achievement_unlocked_title">ACHIEVEMENT!</string>
+    <string name="achievement_unlocked_desc">You unlocked an exclusive new board style!</string>
+    <string name="amazing_button">AMAZING!</string>
+    <string name="basic_rules">BASIC RULES</string>
+    <string name="special_powerups">SPECIAL POWER-UPS</string>
+    
+    <!-- Game Type Selection -->
+    <string name="choose_mode">Choose Mode</string>
+    <string name="triangles">TRIANGLES</string>
+    <string name="squares">SQUARES</string>
+    <string name="no_moves_to_close">No shapes ready to close!</string>
+    <string name="shield_active_cpu_skip">Shield active, no available moves for CPU</string>
+    <string name="debug_powerup_added">Debug: %s added!</string>
+    <string name="player_1">Player 1</string>
+    <string name="player_2">Player 2</string>
+
+    <!-- Board Style Screen -->
+    <string name="board_styles_title">BOARD STYLES</string>
+    <string name="premium_label">PREMIUM</string>
+    <string name="active_label">ACTIVE</string>
+    <string name="play_10_games">PLAY 10 GAMES</string>
+    
+    <string name="style_default">DOT POP! DEFAULT</string>
+    <string name="style_galaxy">GALAXY</string>
+    <string name="style_neon">NEON NIGHT</string>
+    <string name="style_minimalist">MINIMALIST</string>
+    <string name="style_retro">RETRO ARCADE</string>
+    <string name="style_paper">NOTEBOOK</string>
+    <string name="style_chalkboard">CHALKBOARD</string>
+    <string name="style_cyberpunk">CYBERPUNK</string>
+    <string name="style_ancient">ANCIENT SCROLL</string>
+    <string name="style_deep_sea">DEEP SEA</string>
+    <string name="style_founder">FOUNDER GOLD</string>
 </resources>

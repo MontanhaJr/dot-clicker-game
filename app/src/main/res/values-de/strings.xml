@@ -11,11 +11,14 @@
     <string name="rules">Regeln</string>
     <string name="new_game">Neu</string>
     <string name="objective_title">🎯 Ziel</string>
-    <string name="objective_desc">Verbinde Punkte, um Dreiecke zu schließen.</string>
+    <string name="objective_desc_triangles">Verbinde Punkte, um Dreiecke zu schließen.</string>
+    <string name="objective_desc_squares">Verbinde Punkte, um Quadrate zu schließen.</string>
     <string name="turns_title">🎮 Züge</string>
-    <string name="turns_desc">Schließe ein Dreieck ab und spiele erneut.</string>
+    <string name="turns_desc_triangle">Schließe ein Dreieck ab und spiele erneut.</string>
+    <string name="turns_desc_square">Schließe ein Quadrat ab und spiele erneut.</string>
     <string name="prohibited_title">❌ Verboten</string>
-    <string name="prohibited_desc">Linien oder Dreiecke dürfen sich nicht kreuzen.</string>
+    <string name="prohibited_desc_triangles">Linien oder Dreiecke dürfen sich nicht kreuzen.</string>
+    <string name="prohibited_desc_squares">Linien oder Quadrate dürfen sich nicht kreuzen.</string>
     <string name="understood">Verstanden</string>
     <string name="restart_title">🔄 Spiel neu starten?</string>
     <string name="restart_desc">Möchten Sie das Spiel wirklich neu starten? Der aktuelle Fortschritt geht verloren.</string>
@@ -32,7 +35,7 @@
     <string name="easy_title">😊 Einfach</string>
     <string name="easy_desc">CPU spielt zufällig</string>
     <string name="medium_title">🤔 Mittel</string>
-    <string name="medium_desc">CPU versucht Dreiecke zu schließen</string>
+    <string name="medium_desc">CPU versucht Formen zu schließen</string>
     <string name="hard_title">🧠 Schwer</string>
     <string name="hard_desc">CPU spielt strategisch</string>
     <string name="play">Spielen</string>
@@ -59,6 +62,7 @@
     <string name="stats_title">STATISTIKEN</string>
     <string name="global_performance">GLOBALE LEISTUNG</string>
     <string name="triangles_formed">GEFORMTE DREIECKE</string>
+    <string name="squares_formed">GEFORMTE QUADRATE</string>
     <string name="avg_time_per_match">DURCHSCHN. ZEIT PRO SPIEL</string>
     <string name="win_rate_vs_cpu">WINRATE GEGEN CPU</string>
     <string name="training_only_label">(NUR TRAININGSMODUS)</string>
@@ -68,4 +72,48 @@
 
     <!-- Career Strings -->
     <string name="current_level_label">AKTUELL</string>
+    
+    <!-- Dialog Strings -->
+    <string name="defeat_title">DIESMAL NICHT!</string>
+    <string name="defeat_desc">CPU dominierte Level %d. Erneut versuchen?</string>
+    <string name="retry_button">ERNEUT VERSUCHEN</string>
+    <string name="back_to_map">ZURÜCK ZUR KARTE</string>
+    <string name="game_over_title">SPIEL VORBEI</string>
+    <string name="back_to_menu">ZURÜCK ZUM MENÜ</string>
+    <string name="level_complete_title">LEVEL %d ABGESCHLOSSEN!</string>
+    <string name="level_complete_desc">Du hast diese Herausforderung gemeistert. Bereit für die nächste?</string>
+    <string name="next_level_button">NÄCHSTES LEVEL</string>
+    <string name="achievement_unlocked_title">ERFOLG!</string>
+    <string name="achievement_unlocked_desc">Du hast einen exklusiven neuen Board-Stil freigeschaltet!</string>
+    <string name="amazing_button">GROSSARTIG!</string>
+    <string name="basic_rules">GRUNDREGELN</string>
+    <string name="special_powerups">SPEZIAL POWER-UPS</string>
+    
+    <!-- Game Type Selection -->
+    <string name="choose_mode">Modus wählen</string>
+    <string name="triangles">DREIECKE</string>
+    <string name="squares">QUADRATE</string>
+    <string name="no_moves_to_close">Keine Formen bereit zum Schließen!</string>
+    <string name="shield_active_cpu_skip">Schild aktiv, keine verfügbaren Züge für CPU</string>
+    <string name="debug_powerup_added">Debug: %s hinzugefügt!</string>
+    <string name="player_1">Spieler 1</string>
+    <string name="player_2">Spieler 2</string>
+
+    <!-- Board Style Screen -->
+    <string name="board_styles_title">BOARD-STILE</string>
+    <string name="premium_label">PREMIUM</string>
+    <string name="active_label">AKTIV</string>
+    <string name="play_10_games">10 SPIELE SPIELEN</string>
+    
+    <string name="style_default">DOT POP! STANDARD</string>
+    <string name="style_galaxy">GALAXIE</string>
+    <string name="style_neon">NEON NIGHT</string>
+    <string name="style_minimalist">MINIMALISTISCH</string>
+    <string name="style_retro">RETRO-ARCADE</string>
+    <string name="style_paper">NOTIZBUCH</string>
+    <string name="style_chalkboard">KREIDETAFEL</string>
+    <string name="style_cyberpunk">CYBERPUNK</string>
+    <string name="style_ancient">ANTIKE SCHRIFTROLLE</string>
+    <string name="style_deep_sea">TIEFSEE</string>
+    <string name="style_founder">GRÜNDER-GOLD</string>
 </resources>

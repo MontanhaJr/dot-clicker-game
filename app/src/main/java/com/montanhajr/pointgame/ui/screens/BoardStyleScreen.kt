@@ -77,7 +77,7 @@ fun BoardStyleScreen(
                 TopAppBar(
                     title = { 
                         Text(
-                            "ESTILOS DE TABULEIRO", 
+                            stringResource(R.string.board_styles_title), 
                             color = PopWhite, 
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 20.sp
@@ -85,7 +85,7 @@ fun BoardStyleScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PopWhite)
+                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back), tint = PopWhite)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -149,17 +149,17 @@ fun PopStyleCard(
     onClick: () -> Unit
 ) {
     val styleName = when (style) {
-        BoardStyle.DEFAULT_POP -> "PADRÃO DOT POP!"
-        BoardStyle.GALAXY -> "GALÁXIA"
-        BoardStyle.NEON_NIGHT -> "NEON NIGHT"
-        BoardStyle.MINIMALIST_WHITE -> "MINIMALISTA"
-        BoardStyle.RETRO_ARCADE -> "RETRO ARCADE"
-        BoardStyle.PAPER_NOTEBOOK -> "CADERNO"
-        BoardStyle.CHALKBOARD -> "LOUSA"
-        BoardStyle.CYBERPUNK_GLITCH -> "CYBERPUNK"
-        BoardStyle.ANCIENT_SCROLL -> "PERGAMINHO"
-        BoardStyle.DEEP_SEA -> "OCEANO"
-        BoardStyle.FOUNDER_GOLD -> "OURO FUNDADOR"
+        BoardStyle.DEFAULT_POP -> stringResource(R.string.style_default)
+        BoardStyle.GALAXY -> stringResource(R.string.style_galaxy)
+        BoardStyle.NEON_NIGHT -> stringResource(R.string.style_neon)
+        BoardStyle.MINIMALIST_WHITE -> stringResource(R.string.style_minimalist)
+        BoardStyle.RETRO_ARCADE -> stringResource(R.string.style_retro)
+        BoardStyle.PAPER_NOTEBOOK -> stringResource(R.string.style_paper)
+        BoardStyle.CHALKBOARD -> stringResource(R.string.style_chalkboard)
+        BoardStyle.CYBERPUNK_GLITCH -> stringResource(R.string.style_cyberpunk)
+        BoardStyle.ANCIENT_SCROLL -> stringResource(R.string.style_ancient)
+        BoardStyle.DEEP_SEA -> stringResource(R.string.style_deep_sea)
+        BoardStyle.FOUNDER_GOLD -> stringResource(R.string.style_founder)
     }
 
     Card(
@@ -192,7 +192,7 @@ fun PopStyleCard(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (isAchievement) "PLAY 10 GAMES" else "PREMIUM", 
+                            text = if (isAchievement) stringResource(R.string.play_10_games) else stringResource(R.string.premium_label), 
                             color = if (isAchievement) PopYellow else PopCyan, 
                             fontSize = 11.sp, 
                             fontWeight = FontWeight.ExtraBold
@@ -229,7 +229,7 @@ fun PopStyleCard(
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        "ATIVO", 
+                        stringResource(R.string.active_label), 
                         color = PopDarkBlue, 
                         fontSize = 10.sp, 
                         fontWeight = FontWeight.ExtraBold

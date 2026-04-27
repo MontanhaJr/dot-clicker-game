@@ -11,11 +11,14 @@
     <string name="rules">Reglas</string>
     <string name="new_game">Nuevo</string>
     <string name="objective_title">🎯 Objetivo</string>
-    <string name="objective_desc">Conecta puntos para cerrar triángulos.</string>
+    <string name="objective_desc_triangles">Conecta puntos para cerrar triángulos.</string>
+    <string name="objective_desc_squares">Conecta puntos para cerrar cuadrados.</string>
     <string name="turns_title">🎮 Turnos</string>
-    <string name="turns_desc">Completa un triángulo y juega de nuevo.</string>
+    <string name="turns_desc_triangle">Completa un triángulo y juega de nuevo.</string>
+    <string name="turns_desc_square">Completa un cuadrado y juega de nuevo.</string>
     <string name="prohibited_title">❌ Prohibido</string>
-    <string name="prohibited_desc">No cruces líneas ni triángulos.</string>
+    <string name="prohibited_desc_triangles">No cruces líneas ni triángulos.</string>
+    <string name="prohibited_desc_squares">No cruces líneas ni cuadrados.</string>
     <string name="understood">Entendido</string>
     <string name="restart_title">🔄 ¿Reiniciar Juego?</string>
     <string name="restart_desc">¿Estás seguro de que quieres reiniciar? Todo el progreso actual se perderá.</string>
@@ -32,7 +35,7 @@
     <string name="easy_title">😊 Fácil</string>
     <string name="easy_desc">La CPU juega al azar</string>
     <string name="medium_title">🤔 Medio</string>
-    <string name="medium_desc">La CPU intenta cerrar triángulos</string>
+    <string name="medium_desc">La CPU intenta cerrar formas</string>
     <string name="hard_title">🧠 Difícil</string>
     <string name="hard_desc">La CPU juega estratégicamente</string>
     <string name="play">Jugar</string>
@@ -59,6 +62,7 @@
     <string name="stats_title">ESTADÍSTICAS</string>
     <string name="global_performance">RENDIMIENTO GLOBAL</string>
     <string name="triangles_formed">TRIÁNGULOS FORMADOS</string>
+    <string name="squares_formed">CUADRADOS FORMADOS</string>
     <string name="avg_time_per_match">TIEMPO MEDIO POR PARTIDA</string>
     <string name="win_rate_vs_cpu">TASA DE VICTORIA VS CPU</string>
     <string name="training_only_label">(SOLO MODO ENTRENAMIENTO)</string>
@@ -68,4 +72,48 @@
 
     <!-- Career Strings -->
     <string name="current_level_label">ACTUAL</string>
+    
+    <!-- Dialog Strings -->
+    <string name="defeat_title">¡ESTA VEZ NO!</string>
+    <string name="defeat_desc">La CPU dominó el nivel %d. ¿Intentar de nuevo?</string>
+    <string name="retry_button">REINTENTAR</string>
+    <string name="back_to_map">VOLVER AL MAPA</string>
+    <string name="game_over_title">FIN DEL JUEGO</string>
+    <string name="back_to_menu">VOLVER AL MENÚ</string>
+    <string name="level_complete_title">¡NIVEL %d COMPLETADO!</string>
+    <string name="level_complete_desc">Dominaste este desafío. ¿Listo para el siguiente?</string>
+    <string name="next_level_button">SIGUIENTE NIVEL</string>
+    <string name="achievement_unlocked_title">¡LOGRO!</string>
+    <string name="achievement_unlocked_desc">¡Desbloqueaste un nuevo estilo de tablero exclusivo!</string>
+    <string name="amazing_button">¡INCREÍBLE!</string>
+    <string name="basic_rules">REGLAS BÁSICAS</string>
+    <string name="special_powerups">POWER-UPS ESPECIALES</string>
+    
+    <!-- Game Type Selection -->
+    <string name="choose_mode">Elegir Modo</string>
+    <string name="triangles">TRIÁNGULOS</string>
+    <string name="squares">CUADRADOS</string>
+    <string name="no_moves_to_close">¡No hay formas listas para cerrar!</string>
+    <string name="shield_active_cpu_skip">Escudo activo, no hay movimientos disponibles para la CPU</string>
+    <string name="debug_powerup_added">Debug: ¡%s añadido!</string>
+    <string name="player_1">Jugador 1</string>
+    <string name="player_2">Jugador 2</string>
+
+    <!-- Board Style Screen -->
+    <string name="board_styles_title">ESTILOS DE TABLERO</string>
+    <string name="premium_label">PREMIUM</string>
+    <string name="active_label">ACTIVO</string>
+    <string name="play_10_games">JUEGA 10 PARTIDAS</string>
+    
+    <string name="style_default">DOT POP! PREDETERMINADO</string>
+    <string name="style_galaxy">GALAXIA</string>
+    <string name="style_neon">NEON NIGHT</string>
+    <string name="style_minimalist">MINIMALISTA</string>
+    <string name="style_retro">RETRO ARCADE</string>
+    <string name="style_paper">CUADERNO</string>
+    <string name="style_chalkboard">PIZARRA</string>
+    <string name="style_cyberpunk">CYBERPUNK</string>
+    <string name="style_ancient">PERGAMINO</string>
+    <string name="style_deep_sea">OCÉANO</string>
+    <string name="style_founder">ORO FUNDADOR</string>
 </resources>

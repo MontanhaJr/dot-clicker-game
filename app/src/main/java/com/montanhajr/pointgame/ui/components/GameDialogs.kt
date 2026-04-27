@@ -123,7 +123,7 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "NÃO FOI DESSA VEZ!",
+                    text = stringResource(R.string.defeat_title),
                     style = MaterialTheme.typography.headlineMedium,
                     color = PopWhite,
                     fontWeight = FontWeight.ExtraBold,
@@ -133,7 +133,7 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "A CPU dominou o nível $level. Deseja tentar novamente?",
+                    text = stringResource(R.string.defeat_desc, level),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.LightGray,
                     textAlign = TextAlign.Center
@@ -147,7 +147,7 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = PopRed),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("TENTAR NOVAMENTE", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                    Text(stringResource(R.string.retry_button), fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -160,7 +160,7 @@ fun DefeatDialog(level: Int, onRetry: () -> Unit, onBackToMap: () -> Unit) {
                 ) {
                     Icon(Icons.Default.Map, contentDescription = null, tint = PopWhite, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("VOLTAR PARA O MAPA", color = PopWhite, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.back_to_map), color = PopWhite, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -175,7 +175,7 @@ fun GameOverDialog(message: String, onRestart: () -> Unit, onBackToMenu: () -> U
         titleContentColor = PopWhite,
         textContentColor = Color.LightGray,
         shape = RoundedCornerShape(32.dp),
-        title = { Text(text = "FIM DE JOGO", fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), color = PopWhite) },
+        title = { Text(text = stringResource(R.string.game_over_title), fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), color = PopWhite) },
         text = { 
             Text(
                 text = message.uppercase(),
@@ -193,7 +193,7 @@ fun GameOverDialog(message: String, onRestart: () -> Unit, onBackToMenu: () -> U
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("RECOMECAR", fontWeight = FontWeight.ExtraBold)
+                Text(stringResource(R.string.restart_confirm), fontWeight = FontWeight.ExtraBold)
             }
         },
         dismissButton = {
@@ -201,7 +201,7 @@ fun GameOverDialog(message: String, onRestart: () -> Unit, onBackToMenu: () -> U
                 onClick = onBackToMenu,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("VOLTAR AO MENU", color = Color.Gray, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.back_to_menu), color = Color.Gray, fontWeight = FontWeight.Bold)
             }
         }
     )
@@ -234,7 +234,7 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "NÍVEL $level CONCLUÍDO!",
+                    text = stringResource(R.string.level_complete_title, level),
                     style = MaterialTheme.typography.headlineMedium,
                     color = PopWhite,
                     fontWeight = FontWeight.ExtraBold,
@@ -244,7 +244,7 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "Você dominou este desafio. Pronto para o próximo?",
+                    text = stringResource(R.string.level_complete_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.LightGray,
                     textAlign = TextAlign.Center
@@ -260,7 +260,7 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
                 ) {
                     Icon(Icons.Default.NavigateNext, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("PRÓXIMO NÍVEL", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                    Text(stringResource(R.string.next_level_button), fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -273,7 +273,7 @@ fun LevelCompleteDialog(level: Int, onNextLevel: () -> Unit, onBackToMap: () -> 
                 ) {
                     Icon(Icons.Default.Map, contentDescription = null, tint = PopWhite, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("VOLTAR PARA O MAPA", color = PopWhite, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.back_to_map), color = PopWhite, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -316,7 +316,7 @@ fun AchievementUnlockedDialog(achievementName: String, onDismiss: () -> Unit) {
         },
         title = {
             Text(
-                text = "CONQUISTA!",
+                text = stringResource(R.string.achievement_unlocked_title),
                 fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center
             )
@@ -332,7 +332,7 @@ fun AchievementUnlockedDialog(achievementName: String, onDismiss: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Você desbloqueou um novo estilo de tabuleiro exclusivo!",
+                    text = stringResource(R.string.achievement_unlocked_desc),
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     color = PopWhite.copy(alpha = 0.8f)
@@ -346,7 +346,7 @@ fun AchievementUnlockedDialog(achievementName: String, onDismiss: () -> Unit) {
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("INCRÍVEL!", fontWeight = FontWeight.ExtraBold)
+                Text(stringResource(R.string.amazing_button), fontWeight = FontWeight.ExtraBold)
             }
         }
     )
@@ -388,33 +388,25 @@ fun RulesDialog(gameType: GameType, onDismiss: () -> Unit) {
                         .padding(horizontal = 24.dp)
                 ) {
                     // Regras Básicas
-                    Text("REGRAS BÁSICAS", fontWeight = FontWeight.ExtraBold, color = PopWhite, fontSize = 14.sp)
+                    Text(stringResource(R.string.basic_rules), fontWeight = FontWeight.ExtraBold, color = PopWhite, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    val shapeName = if (gameType == GameType.TRIANGLES) "triângulos" else "quadrados"
-                    val shapeNameSingle = if (gameType == GameType.TRIANGLES) "triângulo" else "quadrado"
+                    val objDesc = if (gameType == GameType.TRIANGLES) R.string.objective_desc_triangles else R.string.objective_desc_squares
+                    val turnDesc = if (gameType == GameType.TRIANGLES) R.string.turns_desc_triangle else R.string.turns_desc_square
+                    val probDesc = if (gameType == GameType.TRIANGLES) R.string.prohibited_desc_triangles else R.string.prohibited_desc_squares
 
-                    RuleItem(
-                        title = stringResource(R.string.objective_title), 
-                        description = "Conecte os pontos para fechar $shapeName."
-                    )
+                    RuleItem(title = stringResource(R.string.objective_title), description = stringResource(objDesc))
                     Spacer(modifier = Modifier.height(12.dp))
-                    RuleItem(
-                        title = stringResource(R.string.turns_title), 
-                        description = "Ao completar um $shapeNameSingle, você joga novamente."
-                    )
+                    RuleItem(title = stringResource(R.string.turns_title), description = stringResource(turnDesc))
                     Spacer(modifier = Modifier.height(12.dp))
-                    RuleItem(
-                        title = stringResource(R.string.prohibited_title), 
-                        description = "Não é permitido cruzar linhas ou $shapeName já formados."
-                    )
+                    RuleItem(title = stringResource(R.string.prohibited_title), description = stringResource(probDesc))
                     
                     Spacer(modifier = Modifier.height(24.dp))
-                    Divider(color = PopWhite.copy(alpha = 0.1f))
+                    HorizontalDivider(color = PopWhite.copy(alpha = 0.1f))
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Power-ups
-                    Text("POWER-UPS ESPECIAIS", fontWeight = FontWeight.ExtraBold, color = PopYellow, fontSize = 14.sp)
+                    Text(stringResource(R.string.special_powerups), fontWeight = FontWeight.ExtraBold, color = PopYellow, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     PowerUpType.entries.forEach { powerUp ->

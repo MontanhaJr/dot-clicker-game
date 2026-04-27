@@ -155,7 +155,7 @@ fun GameModeScreen() {
                         onTwoPlayers = { 
                             gameMode = GameMode.TWO_PLAYERS
                             numPlayers = 2
-                            playerNames = listOf("Player 1", "Player 2")
+                            playerNames = listOf(context.getString(R.string.player_1), context.getString(R.string.player_2))
                             showTypeSelectionDialog = true
                          },
                         onVsCpu = { showDifficultyDialog = true },
@@ -174,7 +174,6 @@ fun GameModeScreen() {
 
     if (showTypeSelectionDialog) {
         GameTypeDialog(
-            selectedType = gameType,
             onTypeSelected = { 
                 gameType = it
                 startGame = true
@@ -235,7 +234,6 @@ fun GameModeScreen() {
 
 @Composable
 fun GameTypeDialog(
-    selectedType: GameType,
     onTypeSelected: (GameType) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -246,7 +244,7 @@ fun GameTypeDialog(
         shape = RoundedCornerShape(32.dp),
         title = {
             Text(
-                text = "Escolha o Modo",
+                text = stringResource(R.string.choose_mode),
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center,
@@ -261,7 +259,7 @@ fun GameTypeDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = PopGreen),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("TRIÂNGULOS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                    Text(stringResource(R.string.triangles), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                 }
                 Button(
                     onClick = { onTypeSelected(GameType.SQUARES) },
@@ -269,7 +267,7 @@ fun GameTypeDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = PopBlue),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("QUADRADOS", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                    Text(stringResource(R.string.squares), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                 }
             }
         },
@@ -300,9 +298,6 @@ fun GameModeSelection(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        
-        // Mantemos o GalaxyBackground como uma sobreposição leve se desejar, 
-        // ou podemos removê-lo. Vou mantê-lo com alpha baixo para dar um efeito Pop!
         
         Column(
             modifier = Modifier
@@ -530,6 +525,7 @@ fun MultiplayerDialog(
     onStartGame: (List<String>) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = PopDeepBlue,
@@ -566,7 +562,7 @@ fun MultiplayerDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
-                    onClick = { onStartGame(List(selectedCount) { "Player ${it + 1}" }) },
+                    onClick = { onStartGame(List(selectedCount) { context.getString(R.string.player_label, (it + 1).toString()) }) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PopGreen),
                     shape = RoundedCornerShape(16.dp)

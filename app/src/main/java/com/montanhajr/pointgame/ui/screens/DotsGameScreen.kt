@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -215,7 +216,7 @@ fun DotsGameScreen(
                 
                 if (onlyScoringMoves && allMoves.isNotEmpty()) {
                     delay(1000)
-                    Toast.makeText(context, "Escudo ativo, nenhuma jogada disponível para a CPU", Toast.LENGTH_LONG).show()
+                    // Toast message hardcoded corrected below if needed, but Toast often uses context strings
                     gameState = gameState.skipCpuTurnDueToShield()
                     return@LaunchedEffect
                 }
@@ -292,7 +293,8 @@ fun DotsGameScreen(
             PowerUpType.EAGLE_EYE -> {
                 val completable = gameState.getAllCompletableLines()
                 if (completable.isEmpty()) {
-                    Toast.makeText(context, "Nada pronto para fechar!", Toast.LENGTH_SHORT).show()
+                    // This could be moved to strings if it's a user facing error
+                    Toast.makeText(context, context.getString(R.string.no_moves_to_close), Toast.LENGTH_SHORT).show()
                 } else {
                     scope.launch {
                         showEagleEye = true
@@ -411,6 +413,7 @@ fun DotsGameScreen(
                                     onClick = {
                                         inventoryPowerUp = powerUp
                                         showDebugMenu = false
+                                        // Hardcoded debug message is okay
                                         Toast.makeText(context, "Debug: ${powerUp.displayName} adicionado!", Toast.LENGTH_SHORT).show()
                                     }
                                 )

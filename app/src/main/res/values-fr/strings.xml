@@ -11,11 +11,14 @@
     <string name="rules">Règles</string>
     <string name="new_game">Nouveau</string>
     <string name="objective_title">🎯 Objectif</string>
-    <string name="objective_desc">Reliez les points pour fermer des triangles.</string>
+    <string name="objective_desc_triangles">Reliez les points pour fermer des triangles.</string>
+    <string name="objective_desc_squares">Reliez les points pour fermer des carrés.</string>
     <string name="turns_title">🎮 Tours</string>
-    <string name="turns_desc">Complétez un triangle et rejouez.</string>
+    <string name="turns_desc_triangle">Complétez un triangle et rejouez.</string>
+    <string name="turns_desc_square">Complétez un carré et rejouez.</string>
     <string name="prohibited_title">❌ Interdit</string>
-    <string name="prohibited_desc">Ne croisez pas de lignes ou de triangles.</string>
+    <string name="prohibited_desc_triangles">Ne croisez pas de lignes ou de triangles.</string>
+    <string name="prohibited_desc_squares">Ne croisez pas de lignes ou de carrés.</string>
     <string name="understood">Compris</string>
     <string name="restart_title">🔄 Recommencer ?</string>
     <string name="restart_desc">Voulez-vous vraiment recommencer ? Toute la progression actuelle sera perdue.</string>
@@ -32,7 +35,7 @@
     <string name="easy_title">😊 Facile</string>
     <string name="easy_desc">L\'IA joue au hasard</string>
     <string name="medium_title">🤔 Moyen</string>
-    <string name="medium_desc">L\'IA essaie de fermer les triangles</string>
+    <string name="medium_desc">L\'IA essaie de fermer les formes</string>
     <string name="hard_title">🧠 Difficile</string>
     <string name="hard_desc">L\'IA joue stratégiquement</string>
     <string name="play">Jouer</string>
@@ -59,6 +62,7 @@
     <string name="stats_title">STATISTIQUES</string>
     <string name="global_performance">PERFORMANCE GLOBALE</string>
     <string name="triangles_formed">TRIANGLES FORMÉS</string>
+    <string name="squares_formed">CARRÉS FORMÉS</string>
     <string name="avg_time_per_match">TEMPS MOYEN PAR MATCH</string>
     <string name="win_rate_vs_cpu">TAUX DE VICTOIRE VS IA</string>
     <string name="training_only_label">(MODE ENTRAÎNEMENT UNIQUEMENT)</string>
@@ -68,4 +72,48 @@
 
     <!-- Career Strings -->
     <string name="current_level_label">ACTUEL</string>
+    
+    <!-- Dialog Strings -->
+    <string name="defeat_title">PAS CETTE FOIS !</string>
+    <string name="defeat_desc">L\'IA a dominé le niveau %d. Réessayer ?</string>
+    <string name="retry_button">RÉESSAYER</string>
+    <string name="back_to_map">RETOUR À LA CARTE</string>
+    <string name="game_over_title">PARTIE TERMINÉE</string>
+    <string name="back_to_menu">RETOUR AU MENU</string>
+    <string name="level_complete_title">NIVEAU %d TERMINÉ !</string>
+    <string name="level_complete_desc">Vous avez maîtrisé ce défi. Prêt pour le suivant ?</string>
+    <string name="next_level_button">NIVEAU SUIVANT</string>
+    <string name="achievement_unlocked_title">SUCCÈS !</string>
+    <string name="achievement_unlocked_desc">Vous avez débloqué un nouveau style de plateau exclusif !</string>
+    <string name="amazing_button">INCROYABLE !</string>
+    <string name="basic_rules">RÈGLES DE BASE</string>
+    <string name="special_powerups">POWER-UPS SPÉCIAUX</string>
+    
+    <!-- Game Type Selection -->
+    <string name="choose_mode">Choisir le Mode</string>
+    <string name="triangles">TRIANGLES</string>
+    <string name="squares">CARRÉS</string>
+    <string name="no_moves_to_close">Aucune forme prête à être fermée !</string>
+    <string name="shield_active_cpu_skip">Bouclier actif, aucun coup disponible pour l\'IA</string>
+    <string name="debug_powerup_added">Debug : %s ajouté !</string>
+    <string name="player_1">Joueur 1</string>
+    <string name="player_2">Joueur 2</string>
+
+    <!-- Board Style Screen -->
+    <string name="board_styles_title">STYLES DE PLATEAU</string>
+    <string name="premium_label">PREMIUM</string>
+    <string name="active_label">ACTIF</string>
+    <string name="play_10_games">JOUER 10 PARTIES</string>
+    
+    <string name="style_default">DOT POP! PAR DÉFAUT</string>
+    <string name="style_galaxy">GALAXIE</string>
+    <string name="style_neon">NEON NIGHT</string>
+    <string name="style_minimalist">MINIMALISTE</string>
+    <string name="style_retro">RÉTRO ARCADE</string>
+    <string name="style_paper">CAHIER</string>
+    <string name="style_chalkboard">TABLEAU NOIR</string>
+    <string name="style_cyberpunk">CYBERPUNK</string>
+    <string name="style_ancient">PARCHEMIN ANCIEN</string>
+    <string name="style_deep_sea">ABYSSES</string>
+    <string name="style_founder">OR FONDATEUR</string>
 </resources>
